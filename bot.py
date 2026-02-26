@@ -8,6 +8,7 @@ import urllib.request
 import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from datetime import datetime, timezone, timedelta
+from zoneinfo import ZoneInfo
 from email.utils import parsedate_to_datetime
 from typing import Dict, List, Optional, Tuple, Any
 
@@ -96,6 +97,36 @@ RUSSIAN_MILLION_PLUS_CITIES: Dict[str, City] = {
     "khabarovsk": City("khabarovsk", "Хабаровск", "Khabarovsk", 48.4827, 135.0838, ("Хабаровский край",)),
     "vladivostok": City("vladivostok", "Владивосток", "Vladivostok", 43.1198, 131.8869, ("Приморский край", "Приморье")),
     "mahachkala": City("mahachkala", "Махачкала", "Makhachkala", 42.9849, 47.5047, ("Дагестан", "Дагестана")),
+}
+
+# Часовой пояс (IANA) для каждого города — для актуального местного времени в сообщении о погоде
+CITY_TIMEZONES: Dict[str, str] = {
+    "moscow": "Europe/Moscow",
+    "spb": "Europe/Moscow",
+    "nizhny_novgorod": "Europe/Moscow",
+    "kazan": "Europe/Moscow",
+    "voronezh": "Europe/Moscow",
+    "volgograd": "Europe/Moscow",
+    "krasnodar": "Europe/Moscow",
+    "rostov_on_don": "Europe/Moscow",
+    "saratov": "Europe/Moscow",
+    "ulyanovsk": "Europe/Moscow",
+    "mahachkala": "Europe/Moscow",
+    "samara": "Europe/Samara",
+    "tolyatti": "Europe/Samara",
+    "izhevsk": "Europe/Samara",
+    "yekaterinburg": "Asia/Yekaterinburg",
+    "chelyabinsk": "Asia/Yekaterinburg",
+    "perm": "Asia/Yekaterinburg",
+    "tyumen": "Asia/Yekaterinburg",
+    "ufa": "Asia/Yekaterinburg",
+    "omsk": "Asia/Omsk",
+    "novosibirsk": "Asia/Krasnoyarsk",
+    "barnaul": "Asia/Barnaul",
+    "krasnoyarsk": "Asia/Krasnoyarsk",
+    "irkutsk": "Asia/Irkutsk",
+    "khabarovsk": "Asia/Vladivostok",
+    "vladivostok": "Asia/Vladivostok",
 }
 
 # Региональные RSS: у каждого города — своя лента (городские/областные новости)
@@ -376,13 +407,33 @@ def _weather_desc(code: Optional[int]) -> str:
     return "без осадков" if code is not None and code < 51 else "осадки"
 
 
+# Названия месяцев и дней недели для вывода местного времени
+_MONTHS_RU = ("января", "февраля", "марта", "апреля", "мая", "июня",
+              "июля", "августа", "сентября", "октября", "ноября", "декабря")
+_WEEKDAYS_RU = ("пн", "вт", "ср", "чт", "пт", "сб", "вс")
+
+
+def _city_local_time_str(city: City) -> str:
+    """Возвращает актуальное местное время в городе для вставки в сообщение о погоде."""
+    tz_name = CITY_TIMEZONES.get(city.slug, "Europe/Moscow")
+    try:
+        tz = ZoneInfo(tz_name)
+        now = datetime.now(tz)
+        wd = _WEEKDAYS_RU[now.weekday()]
+        month = _MONTHS_RU[now.month - 1]
+        return f"{now.strftime('%H:%M')}, {wd}, {now.day} {month} {now.year} г."
+    except Exception:
+        return datetime.now(timezone.utc).strftime("%H:%M UTC, %d.%m.%Y")
+
+
 async def get_weather(city: City) -> str:
     url = "https://api.open-meteo.com/v1/forecast"
+    tz_name = CITY_TIMEZONES.get(city.slug, "Europe/Moscow")
     params = {
         "latitude": str(city.lat),
         "longitude": str(city.lon),
         "current": "temperature_2m,relative_humidity_2m,weather_code,surface_pressure,wind_speed_10m",
-        "timezone": "Europe/Moscow",
+        "timezone": tz_name,
     }
 
     async with aiohttp.ClientSession() as session:
@@ -398,9 +449,11 @@ async def get_weather(city: City) -> str:
     wind_speed = cur.get("wind_speed_10m")
     code = cur.get("weather_code")
     desc = _weather_desc(code)
+    local_time = _city_local_time_str(city)
 
     lines: List[str] = [
         f"🌤 Погода в городе {city.name_ru}:",
+        f"🕐 Местное время: {local_time}",
         f"• Температура: {temp}°C" if temp is not None else "",
         f"• {desc.capitalize()}",
         f"• Влажность: {humidity}%" if humidity is not None else "",
