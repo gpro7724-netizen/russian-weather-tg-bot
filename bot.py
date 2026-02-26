@@ -885,16 +885,19 @@ async def send_city_info(
     await send_news_only(context, chat_id, city)
 
 
+# Метка версии: если пользователь видит это в чате — бот запущен из ЭТОГО кода (tg bot2 / russian-weather-tg-bot)
+_START_VERSION_MARKER = "🆕 Меню внизу экрана"
+
 async def _send_start_content(
     context: ContextTypes.DEFAULT_TYPE, chat_id: int
 ) -> None:
-    """Отправляет карту России и блок меню (6 подписанных кнопок). Используется в /start и по кнопке «Старт и карта»."""
+    """Отправляет карту России и блок меню. Меню внизу экрана отправляется отдельным сообщением для надёжного отображения."""
     caption = (
-        "🗺 **Карта России**\n\n"
+        f"🗺 **Карта России** • {_START_VERSION_MARKER}\n\n"
         "Привет! Я бот погоды и новостей по городам‑миллионникам.\n\n"
         "**Команды:** /start — старт и карта, /menu — меню, /city — выбор города, "
         "/weather — погода, /news — новости, /help — справка.\n\n"
-        "Кнопка **☰ Меню** слева от поля ввода или блок кнопок ниже."
+        "⬇️ **Под картой придёт сообщение с кнопками меню** (Справка, Выбор города, Погода, Новости и др.) — они закрепятся внизу экрана."
     )
     if os.path.isfile(MAP_RUSSIA_PATH):
         try:
@@ -908,9 +911,7 @@ async def _send_start_content(
             )
         except Exception as e:
             logger.warning("Отправка карты из файла не удалась: %s", e)
-            await context.bot.send_message(
-                chat_id=chat_id, text=caption, parse_mode=ParseMode.MARKDOWN
-            )
+            await context.bot.send_message(chat_id=chat_id, text=caption, parse_mode=ParseMode.MARKDOWN)
     else:
         try:
             map_bytes = await _get_russia_map_bytes()
@@ -922,20 +923,20 @@ async def _send_start_content(
             )
         except Exception as e:
             logger.warning("Карта не отправлена: %s", e)
-            await context.bot.send_message(
-                chat_id=chat_id, text=caption, parse_mode=ParseMode.MARKDOWN
-            )
+            await context.bot.send_message(chat_id=chat_id, text=caption, parse_mode=ParseMode.MARKDOWN)
+
+    # Блок меню внизу экрана — отдельным сообщением (так клавиатура гарантированно показывается во всех клиентах)
     await context.bot.send_message(
         chat_id=chat_id,
-        text="📋 **Меню** — выберите действие (кнопки под сообщением и внизу экрана):",
-        reply_markup=build_main_menu_keyboard(),
+        text="📋 **Меню** — нажмите одну из кнопок внизу экрана:",
+        reply_markup=build_reply_menu_keyboard(),
         parse_mode=ParseMode.MARKDOWN,
     )
-    # Постоянный блок меню внизу экрана (как на образце)
+    # Inline-кнопки под сообщением (дублируют меню)
     await context.bot.send_message(
         chat_id=chat_id,
-        text="⬇️ Кнопки меню закреплены внизу.",
-        reply_markup=build_reply_menu_keyboard(),
+        text="Или выберите действие кнопками под этим сообщением:",
+        reply_markup=build_main_menu_keyboard(),
     )
 
 
@@ -1155,7 +1156,8 @@ def _log_bot_username() -> None:
         logger.warning("Не удалось получить имя бота: %s", e)
 
 
-# Список команд бота (при вводе / в чате)
+# Блок «Меню» как у @WantToPayBot: список команд по кнопке ☰ слева от поля ввода.
+# Заполняется через set_my_commands и отображается при нажатии на кнопку меню (MenuButtonCommands).
 BOT_COMMANDS_MENU: List[BotCommand] = [
     BotCommand("start", "Старт и карта России"),
     BotCommand("menu", "Открыть меню с кнопками"),
@@ -1167,7 +1169,7 @@ BOT_COMMANDS_MENU: List[BotCommand] = [
 
 
 async def post_init_set_commands(application) -> None:
-    """Устанавливает список команд и кнопку «Меню» при запуске бота (паттерн из telegram-bot-builder)."""
+    """Устанавливает блок меню: список команд (☰) и кнопку «Меню» при запуске бота."""
     bot = application.bot
     scope_default = BotCommandScopeDefault()
     scope_private = BotCommandScopeAllPrivateChats()
@@ -1191,6 +1193,8 @@ def main() -> None:
     if len(TELEGRAM_TOKEN) < 20:
         raise RuntimeError("TELEGRAM_TOKEN похож на пустой или неверный. Проверьте .env")
 
+    logger.info("Запуск из папки: %s", _script_dir)
+    logger.info("Токен загружен (первые 15 символов): %s...", TELEGRAM_TOKEN[:15] if len(TELEGRAM_TOKEN) >= 15 else "***")
     _log_bot_username()
 
     app = (
