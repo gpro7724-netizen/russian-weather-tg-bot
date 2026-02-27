@@ -2,9 +2,12 @@
   "use strict";
 
   const MAP_EXTENT = { lonMin: 19, latMin: 41, lonMax: 180, latMax: 82 };
-  const OPEN_METEO = "https://api.open-meteo.com/v1/forecast";
+  const WEATHERAPI_BASE = "https://api.weatherapi.com/v1";
   const RUSSIA_CENTER = [61, 96];
   const RUSSIA_ZOOM = 3;
+
+  // Ключ WeatherAPI.com прокидывается из index.html через window.WEATHER_API_KEY.
+  const WEATHER_API_KEY = (window.WEATHER_API_KEY || "").trim();
 
   var tg = null;
   var mapLanding = null;
@@ -106,15 +109,19 @@
   }
 
   function fetchWeather(lat, lon, timezone) {
+    // Используем WeatherAPI.com: forecast.json (текущая погода + прогноз).
+    if (!WEATHER_API_KEY) {
+      return Promise.reject(new Error("Не задан ключ WEATHER_API_KEY для WeatherAPI.com"));
+    }
     var params = new URLSearchParams({
-      latitude: lat,
-      longitude: lon,
-      timezone: timezone,
-      current: "temperature_2m,relative_humidity_2m,weather_code,surface_pressure,wind_speed_10m,apparent_temperature",
-      daily: "temperature_2m_max,temperature_2m_min,weather_code",
-      forecast_days: 2
+      key: WEATHER_API_KEY,
+      q: lat + "," + lon,
+      days: "3",
+      lang: "ru",
+      aqi: "no",
+      alerts: "no"
     });
-    var url = OPEN_METEO + "?" + params.toString();
+    var url = WEATHERAPI_BASE + "/forecast.json?" + params.toString();
     return fetchJsonWithRetry(url, 3);
   }
 
@@ -184,13 +191,19 @@
   }
 
   function fetchCurrentTemp(lat, lon) {
-    var url = OPEN_METEO + "?" + new URLSearchParams({
-      latitude: lat,
-      longitude: lon,
-      current: "temperature_2m"
+    if (!WEATHER_API_KEY) {
+      // Если ключ не задан, просто не показываем температуру, но не ломаем карту.
+      return Promise.resolve(null);
+    }
+    var url = WEATHERAPI_BASE + "/current.json?" + new URLSearchParams({
+      key: WEATHER_API_KEY,
+      q: lat + "," + lon,
+      lang: "ru",
+      aqi: "no"
     }).toString();
     return fetchJsonWithRetry(url, 2).then(function (d) {
-      return d.current && d.current.temperature_2m != null ? Math.round(d.current.temperature_2m) : null;
+      var cur = d && d.current;
+      return cur && cur.temp_c != null ? Math.round(cur.temp_c) : null;
     }).catch(function () { return null; });
   }
 
@@ -375,12 +388,14 @@
         listEl.appendChild(li);
       });
       toShow.forEach(function (c) {
-        fetch(OPEN_METEO + "?" + new URLSearchParams({ latitude: c.lat, longitude: c.lon, current: "temperature_2m,weather_code" }).toString()).then(function (r) { return r.json(); }).then(function (data) {
-          var cur = data.current;
-          var t = cur && cur.temperature_2m;
-          var code = cur && cur.weather_code;
+        fetchCurrentTemp(c.lat, c.lon).then(function (t) {
           var tempEl = app.querySelector(".temp[data-slug=\"" + c.slug + "\"]");
-          if (tempEl && t != null) tempEl.textContent = (t > 0 ? "+" : "") + Math.round(t) + "°C";
+          if (!tempEl) return;
+          if (t != null) {
+            tempEl.textContent = (t > 0 ? "+" : "") + Math.round(t) + "°C";
+          } else {
+            tempEl.textContent = "—";
+          }
         }).catch(function () {});
       });
     }
@@ -540,29 +555,47 @@
 
     function loadCityWeather() {
       fetchWeather(city.lat, city.lon, city.timezone).then(function (data) {
-        var cur = data.current;
+        var cur = data && data.current;
         if (cur) {
-          var pressureMm = hPaToMmHg(cur.surface_pressure);
+          var pressureMm = hPaToMmHg(cur.pressure_mb);
+          var descText = cur.condition && cur.condition.text ? cur.condition.text : "";
           currentBlock.className = "current-weather";
           currentBlock.innerHTML =
-            "<div class=\"temp-main\">" + (cur.temperature_2m > 0 ? "+" : "") + Math.round(cur.temperature_2m) + "°C</div>" +
-            "<div class=\"desc\">" + escapeHtml(weatherCodeToDesc(cur.weather_code)) + "</div>" +
+            "<div class=\"temp-main\">" + (cur.temp_c > 0 ? "+" : "") + Math.round(cur.temp_c) + "°C</div>" +
+            "<div class=\"desc\">" + escapeHtml(descText) + "</div>" +
             "<div class=\"details\">" +
-            "Ощущается: " + (cur.apparent_temperature != null ? (cur.apparent_temperature > 0 ? "+" : "") + Math.round(cur.apparent_temperature) + "°C" : "—") + " · " +
-            "Влажность: " + (cur.relative_humidity_2m != null ? cur.relative_humidity_2m + "%" : "—") + " · " +
-            "Ветер: " + (cur.wind_speed_10m != null ? cur.wind_speed_10m + " м/с" : "—") + " · " +
+            "Ощущается: " + (cur.feelslike_c != null ? (cur.feelslike_c > 0 ? "+" : "") + Math.round(cur.feelslike_c) + "°C" : "—") + " · " +
+            "Влажность: " + (cur.humidity != null ? cur.humidity + "%" : "—") + " · " +
+            "Ветер: " + (cur.wind_kph != null ? Math.round(cur.wind_kph / 3.6) + " м/с" : "—") + " · " +
             "Давление: " + (pressureMm != null ? pressureMm + " мм рт. ст." : "—") +
             "</div>";
         }
-        var daily = data.daily;
-        if (daily && daily.time && daily.temperature_2m_max && daily.weather_code) {
-          var times = daily.time, maxT = daily.temperature_2m_max, minT = daily.temperature_2m_min, codes = daily.weather_code;
+        var forecast = data && data.forecast;
+        var days = forecast && forecast.forecastday;
+        if (days && days.length) {
           var html = "<strong>Прогноз на 2 дня</strong>";
-          for (var i = 0; i < times.length; i++) {
-            var d = new Date(times[i]);
-            var dayLabel = i === 0 ? "Сегодня" : (i === 1 ? "Завтра" : (d.getDate() + "." + (d.getMonth() + 1)));
-            var tempStr = (maxT[i] != null && minT[i] != null) ? (maxT[i] > 0 ? "+" : "") + Math.round(maxT[i]) + "° / " + (minT[i] > 0 ? "+" : "") + Math.round(minT[i]) + "°" : "—";
-            html += "<div class=\"day-forecast\"><span class=\"slot\">" + escapeHtml(dayLabel) + "</span><span class=\"temp\">" + tempStr + "</span><span>" + escapeHtml(weatherCodeToDesc(codes[i])) + "</span></div>";
+          for (var i = 0; i < Math.min(days.length, 3); i++) {
+            var day = days[i];
+            var dateStr = day && day.date;
+            var dayInfo = day && day.day;
+            var d = dateStr ? new Date(dateStr) : null;
+            var dayLabel;
+            if (i === 0) {
+              dayLabel = "Сегодня";
+            } else if (i === 1) {
+              dayLabel = "Завтра";
+            } else if (d) {
+              dayLabel = d.getDate() + "." + (d.getMonth() + 1);
+            } else {
+              dayLabel = "День " + (i + 1);
+            }
+            var maxT = dayInfo && dayInfo.maxtemp_c;
+            var minT = dayInfo && dayInfo.mintemp_c;
+            var condText = dayInfo && dayInfo.condition && dayInfo.condition.text;
+            var tempStr = (maxT != null && minT != null)
+              ? (maxT > 0 ? "+" : "") + Math.round(maxT) + "° / " + (minT > 0 ? "+" : "") + Math.round(minT) + "°"
+              : "—";
+            html += "<div class=\"day-forecast\"><span class=\"slot\">" + escapeHtml(dayLabel) + "</span><span class=\"temp\">" + tempStr + "</span><span>" + escapeHtml(condText || "") + "</span></div>";
           }
           dayBlock.innerHTML = html;
         }

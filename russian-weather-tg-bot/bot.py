@@ -60,12 +60,15 @@ logger = logging.getLogger(__name__)
 
 
 TELEGRAM_TOKEN = (os.getenv("TELEGRAM_TOKEN") or "").strip()
-OPENWEATHER_API_KEY = os.getenv("OPENWEATHER_API_KEY")
+WEATHERAPI_KEY = (os.getenv("WEATHERAPI_KEY") or os.getenv("OPENWEATHER_API_KEY") or "").strip()
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 VK_ACCESS_TOKEN = (os.getenv("VK_ACCESS_TOKEN") or "").strip()
 # URL мини-приложения (Pac-Man). Должен быть HTTPS. Пример: https://your-domain.com/mini_app/
 MINI_APP_URL = (os.getenv("MINI_APP_URL") or "").strip()
 WEATHER_APP_URL = (os.getenv("WEATHER_APP_URL") or "").strip()
+
+# Базовый URL нового провайдера погоды (WeatherAPI.com)
+WEATHERAPI_BASE_URL = "https://api.weatherapi.com/v1"
 
 
 @dataclass
@@ -827,6 +830,12 @@ def _require_token_or_exit() -> None:
         raise RuntimeError(
             "Не задан TELEGRAM_TOKEN. Установите его в .env или переменных окружения."
         )
+    if not WEATHERAPI_KEY:
+        raise RuntimeError(
+            "Не задан WEATHERAPI_KEY (или OPENWEATHER_API_KEY как запасной). "
+            "Зарегистрируйтесь на https://www.weatherapi.com/, создайте API-ключ "
+            "и пропишите его в .env рядом с bot.py."
+        )
 
 
 async def fetch_json(
@@ -841,6 +850,26 @@ async def fetch_json(
     except Exception as exc:
         logger.exception("Error fetching %s: %s", url, exc)
         return None
+
+
+def _emoji_from_condition_text(text: Optional[str]) -> str:
+    """Эмодзи погоды по текстовому описанию (WeatherAPI lang=ru)."""
+    if not text:
+        return "🌡️"
+    s = text.lower()
+    if "гроза" in s:
+        return "⛈"
+    if "дожд" in s or "ливн" in s:
+        return "🌧"
+    if "снег" in s or "метел" in s or "позем" in s:
+        return "❄️"
+    if "туман" in s or "дымк" in s or "мгла" in s:
+        return "🌫"
+    if "ясно" in s or "солнечно" in s:
+        return "☀️"
+    if "облачно" in s or "пасмурно" in s:
+        return "☁️"
+    return "🌡️"
 
 
 def _weather_desc(code: Optional[int]) -> str:
@@ -901,41 +930,46 @@ def _city_local_time_str_fallback(city: City) -> str:
 
 
 async def get_weather(city: City) -> str:
-    url = "https://api.open-meteo.com/v1/forecast"
-    tz_name = CITY_TIMEZONES.get(city.slug, "Europe/Moscow")
+    if not WEATHERAPI_KEY:
+        return "Погодный API не настроен. Добавьте WEATHERAPI_KEY в .env рядом с bot.py."
+
+    # WeatherAPI.com: forecast.json с текущей погодой и прогнозом, локализовано на русский.
     params = {
-        "latitude": str(city.lat),
-        "longitude": str(city.lon),
-        "current": "temperature_2m,relative_humidity_2m,weather_code,surface_pressure,wind_speed_10m",
-        "timezone": tz_name,
+        "key": WEATHERAPI_KEY,
+        "q": f"{city.lat},{city.lon}",
+        "days": "1",
+        "lang": "ru",
+        "aqi": "no",
+        "alerts": "no",
     }
 
     async with aiohttp.ClientSession() as session:
-        data = await fetch_json(session, url, params)
+        data = await fetch_json(session, f"{WEATHERAPI_BASE_URL}/forecast.json", params)
 
     if not data or "current" not in data:
         return "Не удалось получить погоду для этого города. Попробуйте позже."
 
     cur = data["current"]
-    temp = cur.get("temperature_2m")
-    humidity = cur.get("relative_humidity_2m")
-    pressure = cur.get("surface_pressure")
-    wind_speed = cur.get("wind_speed_10m")
-    code = cur.get("weather_code")
-    desc = _weather_desc(code)
-    # Источник времени: 1) WorldTimeAPI (местное по поясу), 2) Open-Meteo current.time, 3) UTC+смещение (без слова UTC)
+    temp = cur.get("temp_c")
+    humidity = cur.get("humidity")
+    pressure_mb = cur.get("pressure_mb")
+    wind_kph = cur.get("wind_kph")
+    cond = cur.get("condition") or {}
+    desc = cond.get("text") or ""
+    # Источник времени: 1) WorldTimeAPI (местное по поясу), 2) WeatherAPI current.last_updated, 3) UTC+смещение (без слова UTC)
     tz_name = CITY_TIMEZONES.get(city.slug, "Europe/Moscow")
     local_time_str = await _fetch_local_time_from_api(tz_name)
-    if not local_time_str and cur.get("time"):
-        local_time_str = _format_local_time_from_iso(cur.get("time"))
+    if not local_time_str and cur.get("last_updated"):
+        # last_updated приходит в локальном времени, но нам важна только строка.
+        local_time_str = cur.get("last_updated")
     if not local_time_str:
         local_time_str = _city_local_time_str_fallback(city)
 
     # Пояс: смещение от UTC
     offset_h = CITY_UTC_OFFSET_HOURS.get(city.slug, 3)
     tz_hint = f" (GMT+{offset_h})"
-    emoji = _weather_emoji(code)
-    desc_cap = desc.capitalize()
+    emoji = _emoji_from_condition_text(desc) if desc else "🌡️"
+    desc_cap = desc.capitalize() if desc else "Без осадков"
     mood = _weather_mood(temp)
 
     # Красивый сочный дизайн: заголовок, время, блок показателей, настроение
@@ -957,10 +991,13 @@ async def get_weather(city: City) -> str:
     extra: List[str] = []
     if humidity is not None:
         extra.append(f"💧 {humidity}%")
-    if pressure is not None:
-        extra.append(f"📊 {pressure} hPa")
-    if wind_speed is not None:
-        extra.append(f"💨 {wind_speed} км/ч")
+    if pressure_mb is not None:
+        # Перевод из мбар в мм рт. ст., чтобы совпадать с мини‑приложением.
+        pressure_mm = round(pressure_mb * 0.750062)
+        extra.append(f"📊 {pressure_mm} мм рт. ст.")
+    if wind_kph is not None:
+        wind_ms = wind_kph / 3.6
+        extra.append(f"💨 {wind_ms:.1f} м/с")
     if extra:
         lines.append("  " + "  ·  ".join(extra))
     if mood:
@@ -972,25 +1009,28 @@ async def get_weather(city: City) -> str:
 
 async def get_weather_data(city: City) -> Optional[Dict[str, Any]]:
     """Возвращает сырые данные погоды для города (temp, code, desc) или None при ошибке."""
-    url = "https://api.open-meteo.com/v1/forecast"
-    tz_name = CITY_TIMEZONES.get(city.slug, "Europe/Moscow")
+    if not WEATHERAPI_KEY:
+        return None
     params = {
-        "latitude": str(city.lat),
-        "longitude": str(city.lon),
-        "current": "temperature_2m,weather_code",
-        "timezone": tz_name,
+        "key": WEATHERAPI_KEY,
+        "q": f"{city.lat},{city.lon}",
+        "days": "1",
+        "lang": "ru",
+        "aqi": "no",
+        "alerts": "no",
     }
     async with aiohttp.ClientSession() as session:
-        data = await fetch_json(session, url, params)
+        data = await fetch_json(session, f"{WEATHERAPI_BASE_URL}/forecast.json", params)
     if not data or "current" not in data:
         return None
     cur = data["current"]
-    temp = cur.get("temperature_2m")
-    code = cur.get("weather_code")
+    temp = cur.get("temp_c")
+    cond = cur.get("condition") or {}
+    desc_text = cond.get("text") or ""
     return {
         "temp": temp,
-        "code": code,
-        "desc": _weather_desc(code),
+        "code": cond.get("code"),
+        "desc": desc_text.lower(),
     }
 
 
@@ -1100,24 +1140,25 @@ def get_user_reminders(user_id: int) -> List[Dict[str, Any]]:
 
 async def get_daily_weather_forecast(city: City) -> str:
     """Прогноз на день: ночь, утро, день, вечер (температура и описание) в местном времени города."""
-    url = "https://api.open-meteo.com/v1/forecast"
     tz_name = CITY_TIMEZONES.get(city.slug, "Europe/Moscow")
+    if not WEATHERAPI_KEY:
+        return "Погодный API не настроен. Добавьте WEATHERAPI_KEY в .env."
     params = {
-        "latitude": str(city.lat),
-        "longitude": str(city.lon),
-        "hourly": "temperature_2m,weather_code",
-        "timezone": tz_name,
-        "forecast_days": 2,
+        "key": WEATHERAPI_KEY,
+        "q": f"{city.lat},{city.lon}",
+        "days": "2",
+        "lang": "ru",
+        "aqi": "no",
+        "alerts": "no",
     }
     async with aiohttp.ClientSession() as session:
-        data = await fetch_json(session, url, params)
-    if not data or "hourly" not in data:
+        data = await fetch_json(session, f"{WEATHERAPI_BASE_URL}/forecast.json", params)
+    if not data or "forecast" not in data:
         return "Не удалось загрузить прогноз. Попробуйте позже."
 
-    hours = data["hourly"].get("time", [])
-    temps = data["hourly"].get("temperature_2m", [])
-    codes = data["hourly"].get("weather_code", [])
-    if not hours or not temps:
+    forecast = data.get("forecast", {})
+    forecast_days = forecast.get("forecastday") or []
+    if not forecast_days:
         return "Нет данных прогноза."
 
     tz = ZoneInfo(tz_name)
@@ -1128,23 +1169,29 @@ async def get_daily_weather_forecast(city: City) -> str:
     else:
         target_date = today
 
+    # Собираем все почасовые значения из прогнозов на 2 дня.
+    hourly_entries = []
+    for fd in forecast_days:
+        for h in fd.get("hour", []):
+            t_str = h.get("time")
+            if not t_str:
+                continue
+            try:
+                # WeatherAPI отдаёт локальное время вида "YYYY-MM-DD HH:MM"
+                dt = datetime.fromisoformat(t_str)
+            except Exception:
+                continue
+            hourly_entries.append((dt, h))
+
     def slot(hour_rep: int, label: str) -> str:
         """Представительный час для слота: 3=ночь, 9=утро, 15=день, 21=вечер."""
-        for i, t in enumerate(hours):
-            try:
-                raw = t.replace("Z", "+00:00")
-                if "+" not in raw and raw.count("-") >= 2:
-                    dt = datetime.fromisoformat(raw).replace(tzinfo=tz)
-                else:
-                    dt = datetime.fromisoformat(raw).astimezone(tz)
-                if dt.date() == target_date and dt.hour == hour_rep:
-                    temp = temps[i] if i < len(temps) else None
-                    code = codes[i] if i < len(codes) else None
-                    desc = _weather_desc(code)
-                    temp_str = f"{temp:+.0f}°C" if temp is not None else "—"
-                    return f"  {label}: {temp_str}, {desc}"
-            except (ValueError, IndexError, TypeError):
-                continue
+        for dt, h in hourly_entries:
+            if dt.date() == target_date and dt.hour == hour_rep:
+                temp = h.get("temp_c")
+                cond = h.get("condition") or {}
+                desc = cond.get("text") or ""
+                temp_str = f"{temp:+.0f}°C" if temp is not None else "—"
+                return f"  {label}: {temp_str}, {desc}"
         return f"  {label}: —"
 
     night = slot(3, "Ночь")
@@ -1170,24 +1217,25 @@ async def get_daily_weather_forecast(city: City) -> str:
 
 async def get_weekly_weather_forecast(city: City) -> str:
     """Прогноз на 7 дней вперёд по городу: ночь, утро, день, вечер для каждого дня."""
-    url = "https://api.open-meteo.com/v1/forecast"
     tz_name = CITY_TIMEZONES.get(city.slug, "Europe/Moscow")
+    if not WEATHERAPI_KEY:
+        return "Погодный API не настроен. Добавьте WEATHERAPI_KEY в .env."
     params = {
-        "latitude": str(city.lat),
-        "longitude": str(city.lon),
-        "hourly": "temperature_2m,weather_code",
-        "timezone": tz_name,
-        "forecast_days": 7,
+        "key": WEATHERAPI_KEY,
+        "q": f"{city.lat},{city.lon}",
+        "days": "7",
+        "lang": "ru",
+        "aqi": "no",
+        "alerts": "no",
     }
     async with aiohttp.ClientSession() as session:
-        data = await fetch_json(session, url, params)
-    if not data or "hourly" not in data:
+        data = await fetch_json(session, f"{WEATHERAPI_BASE_URL}/forecast.json", params)
+    if not data or "forecast" not in data:
         return "Не удалось загрузить прогноз на 7 дней. Попробуйте позже."
 
-    hours = data["hourly"].get("time", [])
-    temps = data["hourly"].get("temperature_2m", [])
-    codes = data["hourly"].get("weather_code", [])
-    if not hours or not temps:
+    forecast = data.get("forecast", {})
+    forecast_days = forecast.get("forecastday") or []
+    if not forecast_days:
         return "Нет данных прогноза на 7 дней."
 
     tz = ZoneInfo(tz_name)
@@ -1195,21 +1243,21 @@ async def get_weekly_weather_forecast(city: City) -> str:
 
     # Сгруппируем почасовые данные по дате и часу.
     by_date: Dict[Any, Dict[int, Tuple[Optional[float], Any]]] = {}
-    for i, t in enumerate(hours):
-        try:
-            raw = t.replace("Z", "+00:00")
-            if "+" not in raw and raw.count("-") >= 2:
-                dt = datetime.fromisoformat(raw).replace(tzinfo=tz)
-            else:
-                dt = datetime.fromisoformat(raw).astimezone(tz)
-        except Exception:
-            continue
-        d = dt.date()
-        if d not in by_date:
-            by_date[d] = {}
-        temp = temps[i] if i < len(temps) else None
-        code = codes[i] if i < len(codes) else None
-        by_date[d][dt.hour] = (temp, code)
+    for fd in forecast_days:
+        for h in fd.get("hour", []):
+            t_str = h.get("time")
+            if not t_str:
+                continue
+            try:
+                dt = datetime.fromisoformat(t_str)
+            except Exception:
+                continue
+            d = dt.date()
+            if d not in by_date:
+                by_date[d] = {}
+            temp = h.get("temp_c")
+            code = (h.get("condition") or {}).get("text")
+            by_date[d][dt.hour] = (temp, code)
 
     # Выберем до 7 ближайших дней, для которых есть данные.
     target_dates = []
@@ -1221,7 +1269,7 @@ async def get_weekly_weather_forecast(city: City) -> str:
         return "Нет данных прогноза на 7 дней."
 
     def slot_for_date(d, hour_rep: int, label: str) -> str:
-        """Берёт температуру и код погоды для указанного часа (или ближайшего к нему)."""
+        """Берёт температуру и описание погоды для указанного часа (или ближайшего к нему)."""
         hours_map = by_date.get(d) or {}
         if hour_rep in hours_map:
             temp, code = hours_map[hour_rep]
@@ -1238,7 +1286,7 @@ async def get_weekly_weather_forecast(city: City) -> str:
             if best is None:
                 return f"  {label}: —"
             temp, code = best
-        desc = _weather_desc(code)
+        desc = code or ""
         temp_str = f"{temp:+.0f}°C" if temp is not None else "—"
         return f"  {label}: {temp_str}, {desc}"
 

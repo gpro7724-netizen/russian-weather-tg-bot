@@ -5,7 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#1a1a2e">
   <title>Погода по городам России</title>
-  <script>window.TELEGRAM_BOT_URL = window.TELEGRAM_BOT_URL || "https://t.me/Russianweather1_bot";</script>
+  <script>
+    window.TELEGRAM_BOT_URL = window.TELEGRAM_BOT_URL || "https://t.me/Russianweather1_bot";
+    // Ключ WeatherAPI.com для мини‑приложения.
+    // ВАЖНО: при прямом размещении ключа в этом файле он будет виден в браузере.
+    window.WEATHER_API_KEY = "da74e01a074f45be83a190851262702";
+  </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
