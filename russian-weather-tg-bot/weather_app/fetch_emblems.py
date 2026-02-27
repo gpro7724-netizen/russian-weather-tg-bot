@@ -70,40 +70,40 @@ CITY_FILES = [
     ("kaluga", ["Coat_of_Arms_of_Kaluga.svg"]),
     ("smolensk", ["Coat_of_Arms_of_Smolensk.svg"]),
     # 200k+ города
-    ("penza", ["Coat_of_Arms_of_Penza.svg", "Coat_of_arms_of_Penza.svg"]),
+    ("penza", ["Coat_of_Arms_of_Penza.svg", "Coat_of_arms_of_Penza.svg", "Coat_of_arms_of_Penza_Oblast_(large).svg"]),
     ("astrakhan", ["Coat_of_Arms_of_Astrakhan.svg", "Coat_of_arms_of_Astrakhan.svg"]),
-    ("ulan_ude", ["Coat_of_Arms_of_Ulan-Ude.svg", "Coat_of_arms_of_Ulan-Ude.svg"]),
+    ("ulan_ude", ["Coat_of_Arms_of_Ulan-Ude.svg", "Coat_of_arms_of_Ulan-Ude.svg", "Coat_of_arms_of_Ulan-Ude.svg"]),
     ("surgut", ["Coat_of_Arms_of_Surgut.svg"]),
-    ("yakutsk", ["Coat_of_Arms_of_Yakutsk.svg"]),
-    ("vladimir", ["Coat_of_Arms_of_Vladimir.svg", "Coat_of_arms_of_Vladimir.svg"]),
+    ("yakutsk", ["Coat_of_Arms_of_Yakutsk.svg", "Coat_of_arms_of_Yakutsk.svg"]),
+    ("vladimir", ["Coat_of_Arms_of_Vladimir.svg", "Coat_of_arms_of_Vladimir.svg", "Coat_of_Arms_of_Vladimir_(Vladimir_oblast).svg"]),
     ("belgorod", ["Coat_of_Arms_of_Belgorod.svg"]),
-    ("nizhny_tagil", ["Coat_of_Arms_of_Nizhny_Tagil.svg"]),
-    ("chita", ["Coat_of_Arms_of_Chita.svg"]),
-    ("podolsk", ["Coat_of_Arms_of_Podolsk.svg"]),
+    ("nizhny_tagil", ["Coat_of_Arms_of_Nizhny_Tagil.svg", "Coat_of_arms_of_Nizhny_Tagil.svg"]),
+    ("chita", ["Coat_of_Arms_of_Chita.svg", "Coat_of_arms_of_Chita.svg", "Coat_of_Arms_of_Chita_(Zabaykalsky_Krai).svg"]),
+    ("podolsk", ["Coat_of_Arms_of_Podolsk.svg", "Coat_of_arms_of_Podolsk.svg"]),
     ("saransk", ["Coat_of_Arms_of_Saransk.svg"]),
-    ("vologda", ["Coat_of_Arms_of_Vologda.svg"]),
+    ("vologda", ["Coat_of_arms_of_Vologda_1859.svg", "Coat_of_Arms_of_Vologda.svg", "Coat_of_Arms_of_Vologda_(Vologda_oblast)_(1967).png"]),
     ("kurgan", ["Coat_of_Arms_of_Kurgan.svg"]),
-    ("cherepovets", ["Coat_of_Arms_of_Cherepovets.svg"]),
+    ("cherepovets", ["Coat_of_Arms_of_Cherepovets.svg", "Coat_of_arms_of_Cherepovets.svg", "Coat_of_Arms_of_Cherepovets_(Vologda_oblast).svg"]),
     ("oryol", ["Coat_of_Arms_of_Oryol.svg", "Coat_of_arms_of_Oryol.svg"]),
     ("nizhnevartovsk", ["Coat_of_Arms_of_Nizhnevartovsk.svg"]),
-    ("yoshkar_ola", ["Coat_of_Arms_of_Yoshkar-Ola.svg"]),
-    ("murmansk", ["Coat_of_Arms_of_Murmansk.svg"]),
+    ("yoshkar_ola", ["Coat_of_Arms_of_Yoshkar-Ola.svg", "Coat_of_arms_of_Yoshkar-Ola.svg", "Coat_of_Arms_of_Yoshkar-Ola_(Mari_El).svg"]),
+    ("murmansk", ["Coat_of_Arms_of_Murmansk_(1968-2004).svg", "RUS_Murmansk_COA.svg", "Coat_of_Arms_of_Murmansk.svg"]),
     ("novorossiysk", ["Coat_of_Arms_of_Novorossiysk.svg"]),
-    ("khimki", ["Coat_of_Arms_of_Khimki.svg"]),
-    ("mytishchi", ["Coat_of_Arms_of_Mytishchi.svg"]),
+    ("khimki", ["Coat_of_Arms_of_Khimki.svg", "Coat_of_arms_of_Khimki.svg"]),
+    ("mytishchi", ["Coat_of_Arms_of_Mytishchi.svg", "Coat_of_arms_of_Mytishchi.svg"]),
     ("nalchik", ["Coat_of_Arms_of_Nalchik.svg"]),
-    ("nizhnekamsk", ["Coat_of_Arms_of_Nizhnekamsk.svg"]),
+    ("nizhnekamsk", ["Coat_of_Arms_of_Nizhnekamsk.svg", "Coat_of_arms_of_Nizhnekamsk.svg"]),
     ("blagoveshchensk", ["Coat_of_Arms_of_Blagoveshchensk.svg"]),
-    ("korolyov", ["Coat_of_Arms_of_Korolyov.svg", "Coat_of_Arms_of_Korolev.svg"]),
-    ("shakhty", ["Coat_of_Arms_of_Shakhty.svg"]),
-    ("engels", ["Coat_of_Arms_of_Engels_(Saratov_oblast).svg"]),
+    ("korolyov", ["Coat_of_Arms_of_Korolyov.svg", "Coat_of_Arms_of_Korolev.svg", "Coat_of_arms_of_Korolyov.svg"]),
+    ("shakhty", ["Coat_of_Arms_of_Shakhty.svg", "Coat_of_arms_of_Shakhty.svg"]),
+    ("engels", ["Coat_of_Arms_of_Engels_(Saratov_oblast).svg", "Coat_of_Arms_of_Engels.svg"]),
     ("veliky_novgorod", ["Coat_of_Arms_of_Veliky_Novgorod.svg"]),
-    ("lyubertsy", ["Coat_of_Arms_of_Lyubertsy.svg"]),
-    ("bratsk", ["Coat_of_Arms_of_Bratsk.svg"]),
+    ("lyubertsy", ["Coat_of_Arms_of_Lyubertsy.svg", "Coat_of_arms_of_Lyubertsy.svg"]),
+    ("bratsk", ["Coat_of_Arms_of_Bratsk.svg", "Coat_of_arms_of_Bratsk.svg"]),
     ("stary_oskol", ["Coat_of_Arms_of_Stary_Oskol.svg"]),
     ("angarsk", ["Coat_of_Arms_of_Angarsk.svg"]),
-    ("syktyvkar", ["Coat_of_Arms_of_Syktyvkar.svg"]),
-    ("dzerzhinsk", ["Coat_of_Arms_of_Dzerzhinsk_(Nizhny_Novgorod_Oblast).svg"]),
+    ("syktyvkar", ["Coat_of_Arms_of_Syktyvkar.svg", "Coat_of_arms_of_Syktyvkar.svg", "Coat_of_Arms_of_Syktyvkar_(Komi).svg"]),
+    ("dzerzhinsk", ["Coat_of_Arms_of_Dzerzhinsk_(Nizhny_Novgorod_Oblast).svg", "Coat_of_Arms_of_Dzerzhinsk.svg"]),
 ]
 
 def fetch_thumb(slug, filenames):
@@ -130,6 +130,47 @@ def fetch_thumb(slug, filenames):
             pass
     return None
 
+
+# Поиск герба по названию города на Commons (если по имени файла не нашли)
+SEARCH_NAMES = {
+    "penza": "Penza", "ulan_ude": "Ulan-Ude", "yakutsk": "Yakutsk", "nizhny_tagil": "Nizhny Tagil",
+    "chita": "Chita", "podolsk": "Podolsk", "vologda": "Vologda", "cherepovets": "Cherepovets",
+    "yoshkar_ola": "Yoshkar-Ola", "murmansk": "Murmansk", "khimki": "Khimki", "mytishchi": "Mytishchi",
+    "nizhnekamsk": "Nizhnekamsk", "korolyov": "Korolyov", "shakhty": "Shakhty", "engels": "Engels Saratov",
+    "lyubertsy": "Lyubertsy", "bratsk": "Bratsk", "syktyvkar": "Syktyvkar", "dzerzhinsk": "Dzerzhinsk Russia",
+}
+
+
+def search_commons_coat(slug, name_en):
+    """Ищет на Commons по запросу 'Coat of arms CityName' и возвращает URL 48px или None."""
+    q = "Coat of arms " + name_en
+    url = "https://commons.wikimedia.org/w/api.php?action=query&list=search&srsearch=" + urllib.parse.quote(q) + "&srnamespace=6&format=json&srlimit=5"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "WeatherBot/1.0"})
+        with urllib.request.urlopen(req, timeout=12) as r:
+            d = json.loads(r.read().decode())
+        for hit in d.get("query", {}).get("search", []):
+            title = hit.get("title", "")
+            if "Coat" not in title or "arms" not in title.lower():
+                continue
+            # Исключаем гербы областей и других городов (первое слово названия города должно быть в title)
+            first_word = name_en.split()[0].lower()
+            if first_word not in title.lower():
+                continue
+            file_url = "https://commons.wikimedia.org/w/api.php?action=query&titles=" + urllib.parse.quote(title) + "&prop=imageinfo&iiprop=url&iiurlwidth=48&format=json"
+            req2 = urllib.request.Request(file_url, headers={"User-Agent": "WeatherBot/1.0"})
+            with urllib.request.urlopen(req2, timeout=12) as r2:
+                d2 = json.loads(r2.read().decode())
+            for pid, p in d2.get("query", {}).get("pages", {}).items():
+                if pid != "-1" and "imageinfo" in p and p["imageinfo"]:
+                    thumb = p["imageinfo"][0].get("thumburl") or p["imageinfo"][0].get("url", "")
+                    if thumb and "upload.wikimedia.org" in thumb:
+                        return thumb
+            break
+    except Exception:
+        pass
+    return None
+
 def main():
     out = {}
     existing_path = "emblems.json"
@@ -140,6 +181,8 @@ def main():
         if slug in out:
             continue
         url = fetch_thumb(slug, fname_list)
+        if not url and slug in SEARCH_NAMES:
+            url = search_commons_coat(slug, SEARCH_NAMES[slug])
         if url:
             out[slug] = url
             print(slug, "OK")

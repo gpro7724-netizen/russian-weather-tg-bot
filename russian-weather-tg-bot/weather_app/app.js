@@ -770,6 +770,25 @@
       "<h1>" + escapeHtml(city.name_ru) + "</h1>";
     fragment.appendChild(header);
 
+    var photoWrap = document.createElement("div");
+    photoWrap.className = "city-photo-wrap";
+    var prevBtn = document.createElement("button");
+    prevBtn.type = "button";
+    prevBtn.className = "photo-nav photo-nav-prev";
+    prevBtn.setAttribute("aria-label", "Предыдущее фото");
+    prevBtn.innerHTML = "‹";
+    var nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.className = "photo-nav photo-nav-next";
+    nextBtn.setAttribute("aria-label", "Следующее фото");
+    nextBtn.innerHTML = "›";
+    var historicImg = document.createElement("img");
+    photoWrap.appendChild(prevBtn);
+    photoWrap.appendChild(historicImg);
+    photoWrap.appendChild(nextBtn);
+    fragment.appendChild(photoWrap);
+    setCityImageWithFallback(historicImg, slug);
+
     var currentBlock = document.createElement("div");
     currentBlock.className = "current-weather loading";
     currentBlock.textContent = "Загрузка погоды...";
