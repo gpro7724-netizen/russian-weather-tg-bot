@@ -52,13 +52,14 @@
       height: 48px;
       border: none;
       border-radius: 8px;
-      background: rgba(255,255,255,0.15);
-      color: #fff;
+      background: #334155;
+      color: #f1f5f9;
       font-size: 18px;
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
-    .controls button:active { background: rgba(255,212,0,0.4); }
+    .controls button:active { background: #475569; color: #ffd700; }
     .controls .up { grid-area: up; }
     .controls .left { grid-area: left; }
     .controls .right { grid-area: right; }
@@ -549,10 +550,10 @@
   }
 
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'ArrowUp') { pac.nextDir = 0; e.preventDefault(); }
-    if (e.key === 'ArrowRight') { pac.nextDir = 1; e.preventDefault(); }
-    if (e.key === 'ArrowDown') { pac.nextDir = 2; e.preventDefault(); }
-    if (e.key === 'ArrowLeft') { pac.nextDir = 3; e.preventDefault(); }
+    if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') { pac.nextDir = 0; e.preventDefault(); }
+    if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') { pac.nextDir = 1; e.preventDefault(); }
+    if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { pac.nextDir = 2; e.preventDefault(); }
+    if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { pac.nextDir = 3; e.preventDefault(); }
   });
 
   document.querySelectorAll('.controls button').forEach(btn => {
