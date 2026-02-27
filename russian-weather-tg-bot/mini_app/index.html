@@ -112,7 +112,7 @@
   const H = ROWS * CELL;
   const WALL = 1, DOT = 2, POWER = 3, EMPTY = 0;
 
-  const PAC_SPEED = 0.22;
+  const PAC_SPEED = 0.1;
   const POWER_SEC = 8;
   let ghostTick = 0;
 
@@ -530,7 +530,7 @@
 
     movePacman(dt);
     ghostTick += dt;
-    if (ghostTick >= 50) {
+    if (ghostTick >= 120) {
       ghostTick = 0;
       ghosts.forEach(moveGhostStep);
       checkCollision();
