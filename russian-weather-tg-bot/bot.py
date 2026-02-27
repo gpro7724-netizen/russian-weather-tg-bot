@@ -489,8 +489,6 @@ CITY_RSS_FEEDS: Dict[str, List[str]] = {
 
 # Локальная карта России при приветствии (шаблон из проекта)
 MAP_RUSSIA_PATH = os.path.join(_script_dir, "assets", "map_russia.png")
-# Эталонная тёмная карта России для погоды (форма страны + границы регионов)
-RUSSIA_WEATHER_MAP_BASE = os.path.join(_script_dir, "assets", "russia_weather_base.png")
 # Запасная карта по URL, если локального файла нет
 MAP_RUSSIA_URL = "https://gpro7724-netizen.github.io/russian-weather-tg-bot/weather_app/assets/map_russia.png"
 # Контур России (долгота, широта) — замкнутый полигон по часовой стрелке с северо-запада
@@ -528,23 +526,6 @@ def _point_in_polygon(px: int, py: int, points: List[Tuple[int, int]]) -> bool:
     return inside
 
 
-def _weather_code_to_icon_type(code: Optional[int]) -> str:
-    """Тип иконки погоды по коду WMO: sun, cloud, rain, snow, storm."""
-    if code is None:
-        return "cloud"
-    if code == 0:
-        return "sun"
-    if code in (1, 2, 3, 45, 48):
-        return "cloud"
-    if code in (51, 53, 55, 61, 63, 65, 80, 81, 82):
-        return "rain"
-    if code in (71, 73, 75, 77, 85, 86):
-        return "snow"
-    if code in (95, 96, 99):
-        return "storm"
-    return "cloud"
-
-
 def _generate_russia_map_bytes() -> bytes:
     """Генерирует карту России (контур) и возвращает PNG в байтах."""
     w, h = MAP_IMG_SIZE
@@ -566,136 +547,6 @@ def _generate_russia_map_bytes() -> bytes:
     draw.text(((w - tw) // 2, (h - th) // 2), text, fill=(60, 80, 120), font=font)
     buf = io.BytesIO()
     img.save(buf, format="PNG")
-    return buf.getvalue()
-
-
-def _temp_to_color(temp: Optional[float]) -> Tuple[int, int, int]:
-    """Цвет точки по температуре: холодно — синий, тепло — зелёный/жёлтый, жарко — красный."""
-    if temp is None:
-        return (128, 128, 128)
-    t = max(-40, min(40, temp))
-    # -40 -> синий (0,80,200), 0 -> голубой (100,180,255), +20 -> зелёный (100,220,100), +40 -> красный (220,60,60)
-    if t <= 0:
-        k = (t + 40) / 40
-        r = int(0 + (100 - 0) * k)
-        g = int(80 + (180 - 80) * k)
-        b = int(200 + (255 - 200) * k)
-    else:
-        k = t / 40
-        r = int(100 + (220 - 100) * k)
-        g = int(180 + (220 - 180) * k)
-        b = int(255 + (60 - 255) * k)
-    return (max(0, min(255, r)), max(0, min(255, g)), max(0, min(255, b)))
-
-
-def _draw_weather_icon(draw: ImageDraw.ImageDraw, cx: int, cy: int, icon_type: str, size: int = 20) -> None:
-    """Рисует иконку погоды в центре (cx, cy): солнце, облако, дождь, снег, гроза. Белый цвет на цветном круге."""
-    white = (255, 255, 255)
-    dark = (55, 60, 80)
-    r = size // 2
-    L = r + 5
-    if icon_type == "sun":
-        rays = [(1, 0), (1, 1), (0, 1), (-1, 1), (-1, 0), (-1, -1), (0, -1), (1, -1)]
-        for dx, dy in rays:
-            x2 = cx + int(L * dx * 0.85)
-            y2 = cy - int(L * dy * 0.85)
-            draw.line([cx, cy, x2, y2], fill=white, width=2)
-        draw.ellipse([cx - r // 2, cy - r // 2, cx + r // 2, cy + r // 2], fill=white, outline=dark)
-    elif icon_type == "cloud":
-        draw.ellipse([cx - r - 3, cy + 2, cx - 2, cy + r], fill=white, outline=dark)
-        draw.ellipse([cx - r // 2, cy - r // 2, cx + r // 2, cy + r // 2], fill=white, outline=dark)
-        draw.ellipse([cx + 2, cy - 2, cx + r + 3, cy + r], fill=white, outline=dark)
-    elif icon_type == "rain":
-        for i in (-1, 0, 1):
-            draw.line([cx + i * 5, cy - r, cx + i * 5 + 1, cy + r], fill=white, width=2)
-    elif icon_type == "snow":
-        for (dx, dy) in [(0, r), (0, -r), (r, 0), (-r, 0), (int(r * 0.7), int(r * 0.7)), (int(-r * 0.7), int(-r * 0.7)), (int(r * 0.7), int(-r * 0.7)), (int(-r * 0.7), int(r * 0.7))]:
-            draw.line([cx, cy, cx + dx, cy + dy], fill=white, width=2)
-    else:
-        draw.ellipse([cx - r // 2, cy - r // 2, cx + r // 2, cy + r // 2], fill=white, outline=dark)
-
-
-def _generate_russia_weather_map_bytes(weather_by_slug: Dict[str, Dict[str, Any]]) -> bytes:
-    """Карта России в тёмном стиле: фон по нормальной географической карте + погода по городам."""
-    w, h = MAP_IMG_SIZE
-    outline_pts = [_lonlat_to_xy(lon, lat) for lon, lat in RUSSIA_OUTLINE_LONLAT]
-
-    # 1) Пытаемся использовать нормальную карту России как фон (аскетичная политическая/географическая карта).
-    if os.path.isfile(RUSSIA_WEATHER_MAP_BASE):
-        try:
-            bg = Image.open(RUSSIA_WEATHER_MAP_BASE).convert("RGB")
-            bg = bg.resize((w, h), Image.Resampling.LANCZOS)
-        except Exception:
-            bg = None
-    else:
-        bg = None
-
-    # 2) Если файла нет или не загрузился — рисуем аккуратный контур по координатам.
-    if bg is None:
-        bg = Image.new("RGB", (w, h), (0, 0, 0))
-        draw_bg = ImageDraw.Draw(bg)
-        draw_bg.polygon(outline_pts, fill=(30, 45, 80), outline=(220, 220, 230), width=2)
-
-    draw = ImageDraw.Draw(bg)
-    font = _get_font(11)
-    title_font = _get_font(20)
-
-    # Чтобы подписи не наслаивались, будем помнить уже занятые прямоугольники
-    label_boxes: List[Tuple[int, int, int, int]] = []
-
-    for idx, city in enumerate(RUSSIAN_MILLION_PLUS_CITIES.values()):
-        x, y = _lonlat_to_xy(city.lon, city.lat)
-        if not _point_in_polygon(x, y, outline_pts):
-            continue
-        data = weather_by_slug.get(city.slug)
-        temp = data.get("temp") if data else None
-        code = data.get("code") if data else None
-        color = _temp_to_color(temp)
-        # Чуть меньше круги, чтобы не закрывали друг друга
-        r_circle = 10
-        draw.ellipse([x - r_circle, y - r_circle, x + r_circle, y + r_circle], fill=color, outline=(255, 255, 255), width=2)
-        _draw_weather_icon(draw, x, y, _weather_code_to_icon_type(code), size=14)
-        label = f"{city.name_ru}"
-        if temp is not None:
-            label += f" {temp:+.0f}°"
-        bbox = draw.textbbox((0, 0), label, font=font)
-        tw = bbox[2] - bbox[0]
-        th = bbox[3] - bbox[1]
-        # Небольшой горизонтальный сдвиг в зависимости от индекса, чтобы подписи в плотных регионах расходились
-        jitter = ((idx % 3) - 1) * 10
-        tx = max(2, min(w - tw - 2, x - tw // 2 + jitter))
-        # Базовая позиция — под точкой
-        ty = min(h - th - 2, y + r_circle + 3)
-
-        # Попробуем несколько раз сдвинуть подпись, чтобы не пересекаться с уже размещёнными
-        # Сдвигаем вниз, а если дошли до низа — ставим над точкой.
-        def _intersects(a, b):
-            ax1, ay1, ax2, ay2 = a
-            bx1, by1, bx2, by2 = b
-            return not (ax2 < bx1 or bx2 < ax1 or ay2 < by1 or by2 < ay1)
-
-        box = (tx, ty, tx + tw, ty + th)
-        for _ in range(6):
-            if any(_intersects(box, other) for other in label_boxes):
-                new_ty = ty + th + 2
-                if new_ty + th > h - 2:
-                    # Места снизу нет — пробуем над точкой
-                    new_ty = max(2, y - r_circle - th - 3)
-                ty = new_ty
-                box = (tx, ty, tx + tw, ty + th)
-            else:
-                break
-
-        label_boxes.append(box)
-        draw.text((tx, ty), label, fill=(240, 240, 245), font=font)
-
-    title = "Погода по регионам России"
-    bbox = draw.textbbox((0, 0), title, font=title_font)
-    tw = bbox[2] - bbox[0]
-    draw.text(((w - tw) // 2, 10), title, fill=(240, 240, 245), font=title_font)
-
-    buf = io.BytesIO()
-    bg.save(buf, format="PNG")
     return buf.getvalue()
 
 
@@ -923,18 +774,31 @@ def _weather_emoji(code: Optional[int]) -> str:
 
 
 def _weather_mood(temp: Optional[float]) -> str:
-    """Короткая «настроение» по температуре для сочного текста."""
+    """Короткая «настроение» по температуре для сочного текста + совет по одежде/активности."""
     if temp is None:
         return ""
     if temp < -15:
-        return "🥶 Довольно холодно — теплее одевайтесь!"
+        return "🥶 Довольно холодно — теплее одевайтесь! Теплая куртка и шапка не помешают."
     if temp < 0:
-        return "🧣 Прохладно — захватите шарф."
+        return "🧣 Прохладно — захватите шарф и перчатки. Идеально для прогулки в парке."
     if temp < 15:
-        return "🍂 Комфортная погода для прогулки."
+        return "🍂 Комфортная погода для прогулки. Лёгкая куртка или свитер — и вперёд!"
     if temp < 25:
-        return "🌸 Тепло и уютно — отличный денёк!"
-    return "🌞 Жарко — не забудьте воду и головной убор."
+        return "🌸 Тепло и уютно — отличный денёк! Можно и в футболке, и с лёгкой кофтой."
+    return "🌞 Жарко — не забудьте воду и головной убор. Лучше в тени в полдень."
+
+
+def _time_of_day_separator(offset_hours: int = 3) -> str:
+    """Разделитель по времени суток (по местному времени города)."""
+    local = datetime.now(timezone.utc) + timedelta(hours=offset_hours)
+    h = local.hour
+    if 0 <= h < 6:
+        return "🌙━━━━━━━━━━━━━━━━━━━━🌙"
+    if 6 <= h < 12:
+        return "🌅━━━━━━━━━━━━━━━━━━━━🌅"
+    if 12 <= h < 18:
+        return "☀️━━━━━━━━━━━━━━━━━━━━☀️"
+    return "🌆━━━━━━━━━━━━━━━━━━━━🌆"
 
 
 def _require_token_or_exit() -> None:
@@ -1055,10 +919,11 @@ async def get_weather(city: City) -> str:
 
     # Красивый сочный дизайн: заголовок, время, блок показателей, настроение
     temp_str = f"{temp:+.0f}°C" if temp is not None else "—"
+    sep = _time_of_day_separator(offset_h)
     lines: List[str] = [
-        "✦━━━━━━━━━━━━━━━━━━━━✦",
+        sep,
         f"{emoji} *Погода · {city.name_ru}*",
-        "✦━━━━━━━━━━━━━━━━━━━━✦",
+        sep,
         "",
         f"🕐 _Местное время{tz_hint}_",
         f"   {local_time_str}",
@@ -1106,19 +971,6 @@ async def get_weather_data(city: City) -> Optional[Dict[str, Any]]:
         "code": code,
         "desc": _weather_desc(code),
     }
-
-
-async def get_all_cities_weather() -> Dict[str, Dict[str, Any]]:
-    """Параллельно запрашивает погоду по всем городам. Ключ — slug города."""
-    result: Dict[str, Dict[str, Any]] = {}
-    tasks = [get_weather_data(c) for c in RUSSIAN_MILLION_PLUS_CITIES.values()]
-    done = await asyncio.gather(*tasks, return_exceptions=True)
-    for city, out in zip(RUSSIAN_MILLION_PLUS_CITIES.values(), done):
-        if isinstance(out, dict):
-            result[city.slug] = out
-        elif isinstance(out, Exception):
-            logger.debug("Weather for %s: %s", city.slug, out)
-    return result
 
 
 # ---- Ежедневная рассылка погоды (утро/день/вечер/ночь) ----
@@ -1373,10 +1225,11 @@ async def get_weekly_weather_forecast(city: City) -> str:
         wd = _WEEKDAYS_RU[d.weekday()]
         return f"*{wd} {d.day:02d}.{d.month:02d}*"
 
+    sep = _time_of_day_separator(CITY_UTC_OFFSET_HOURS.get(city.slug, 3))
     lines: List[str] = [
-        "📅━━━━━━━━━━━━━━━━━━━━📅",
+        sep,
         f"*Прогноз на 7 дней · {city.name_ru}*",
-        "📅━━━━━━━━━━━━━━━━━━━━📅",
+        sep,
         "",
     ]
     for d in target_dates:
@@ -1784,6 +1637,13 @@ async def _fetch_dzen_news_for_city(city_name: str, limit: int = 5) -> List[Tupl
 
 async def get_city_news(city: City, limit: int = 5) -> str:
     dzen_line = ""  # Ссылка «Ещё в Дзене» убрана по запросу
+    now = datetime.now()
+    date_str = f"{now.day} {_MONTHS_RU[now.month - 1]} {now.year}"
+    news_header = [
+        f"📰━━━━ Новости · {city.name_ru} · {date_str} ━━📰",
+        "",
+        f"📰 Новости по городу {city.name_ru}:",
+    ]
     # Дзен — с таймаутом, чтобы не блокировать ответ (Playwright может зависать 10–20 сек).
     try:
         dzen_items = await asyncio.wait_for(
@@ -1827,7 +1687,7 @@ async def get_city_news(city: City, limit: int = 5) -> str:
 
     if combined:
         show = [x for x in combined[: limit * 2] if not _is_junk_news_title(x[0])][:limit]
-        lines: List[str] = [f"📰 Новости по городу {city.name_ru}:"]
+        lines = news_header.copy()
         for idx, (title, link) in enumerate(show, start=1):
             lines.append(f"{idx}. [{title}]({link})" if link else f"{idx}. {title}")
         return "\n".join(lines) + dzen_line
@@ -1846,7 +1706,7 @@ async def get_city_news(city: City, limit: int = 5) -> str:
         if data and data.get("status") == "ok":
             articles = [a for a in data.get("articles", []) if not _is_junk_news_title(a.get("title") or "")][:limit]
             if articles:
-                lines = [f"📰 Новости по городу {city.name_ru}:"]
+                lines = news_header.copy()
                 for idx, art in enumerate(articles, start=1):
                     title = art.get("title") or "Без заголовка"
                     url_art = art.get("url")
@@ -1863,14 +1723,22 @@ async def get_city_news(city: City, limit: int = 5) -> str:
     by_city = _filter_news_by_city(raw, city, limit=limit)
     by_city = [(t, l) for t, l in by_city if not _is_junk_news_title(t)]
     if by_city:
-        lines = [f"📰 Новости по городу {city.name_ru} (за неделю):"]
+        lines = [
+            f"📰━━━━ Новости · {city.name_ru} · {date_str} ━━📰",
+            "",
+            f"📰 Новости по городу {city.name_ru} (за неделю):",
+        ]
         for idx, (title, link) in enumerate(by_city[:limit], start=1):
             lines.append(f"{idx}. [{title}]({link})" if link else f"{idx}. {title}")
         return "\n".join(lines) + dzen_line
     # По городу не найдено — показываем общие новости (всегда что-то показываем)
     general_limit = max(limit, 8)
     general = [(t[0], t[1]) for t in raw[: general_limit * 2] if not _is_junk_news_title(t[0])][:general_limit]
-    lines = [f"📰 Новости по городу {city.name_ru} (общая лента России):"]
+    lines = [
+        f"📰━━━━ Новости · {city.name_ru} · {date_str} ━━📰",
+        "",
+        f"📰 Новости по городу {city.name_ru} (общая лента России):",
+    ]
     for idx, (title, link) in enumerate(general, start=1):
         lines.append(f"{idx}. [{title}]({link})" if link else f"{idx}. {title}")
     return "\n".join(lines) + dzen_line
@@ -1891,58 +1759,54 @@ MENU_BTN_CITY = "🏙 Выбор города"
 MENU_BTN_WEATHER = "🌤 Погода"
 MENU_BTN_NEWS = "📰 Новости"
 MENU_BTN_START = "🗺 Старт и карта"
-MENU_BTN_MAP = "🌡 Карта погоды"
 MENU_BTN_MENU = "📋 Меню"
 MENU_BTN_GAME = "🎮 Pac-Man"
 MENU_BTN_WEATHER_APP = "🌐 Погода (приложение)"
 MENU_BTN_REMIND = "⏰ Напоминание о погоде"
 
 MENU_BUTTON_TEXTS = frozenset(
-    {MENU_BTN_HELP, MENU_BTN_CITY, MENU_BTN_WEATHER, MENU_BTN_NEWS, MENU_BTN_START, MENU_BTN_MAP, MENU_BTN_MENU, MENU_BTN_GAME, MENU_BTN_WEATHER_APP, MENU_BTN_REMIND}
+    {MENU_BTN_HELP, MENU_BTN_CITY, MENU_BTN_WEATHER, MENU_BTN_NEWS, MENU_BTN_START, MENU_BTN_MENU, MENU_BTN_GAME, MENU_BTN_WEATHER_APP, MENU_BTN_REMIND}
 )
 
 
 def build_main_menu_keyboard() -> InlineKeyboardMarkup:
-    """Блок меню (inline): сетка кнопок + при необходимости кнопка мини-приложения погоды."""
+    """Блок меню (inline): порядок — погода/новости, приложение, напоминание, остальное, справка и игра последние."""
     buttons: List[List[InlineKeyboardButton]] = [
-        [
-            InlineKeyboardButton(MENU_BTN_HELP, callback_data="menu:help"),
-            InlineKeyboardButton(MENU_BTN_CITY, callback_data="menu:city"),
-        ],
         [
             InlineKeyboardButton(MENU_BTN_WEATHER, callback_data="menu:weather"),
             InlineKeyboardButton(MENU_BTN_NEWS, callback_data="menu:news"),
         ],
         [
+            InlineKeyboardButton(MENU_BTN_REMIND, callback_data="menu:remind"),
+        ],
+        [
+            InlineKeyboardButton(MENU_BTN_CITY, callback_data="menu:city"),
             InlineKeyboardButton(MENU_BTN_START, callback_data="menu:start"),
-            InlineKeyboardButton(MENU_BTN_MAP, callback_data="menu:map"),
         ],
         [
             InlineKeyboardButton(MENU_BTN_MENU, callback_data="menu:menu"),
-            InlineKeyboardButton(MENU_BTN_GAME, callback_data="menu:game"),
         ],
         [
-            InlineKeyboardButton(MENU_BTN_REMIND, callback_data="menu:remind"),
+            InlineKeyboardButton(MENU_BTN_HELP, callback_data="menu:help"),
+            InlineKeyboardButton(MENU_BTN_GAME, callback_data="menu:game"),
         ],
     ]
     if WEATHER_APP_URL and WEATHER_APP_URL.startswith("https://"):
-        buttons.append([
-            InlineKeyboardButton(MENU_BTN_WEATHER_APP, web_app=WebAppInfo(url=WEATHER_APP_URL)),
-        ])
+        buttons.insert(1, [InlineKeyboardButton(MENU_BTN_WEATHER_APP, web_app=WebAppInfo(url=WEATHER_APP_URL))])
     return InlineKeyboardMarkup(buttons)
 
 
 def build_reply_menu_keyboard() -> ReplyKeyboardMarkup:
-    """Постоянная клавиатура внизу экрана (блок меню под полем ввода)."""
+    """Постоянная клавиатура внизу экрана: погода/новости, приложение, напоминание, остальное, справка и игра последние."""
     keyboard = [
-        [KeyboardButton(MENU_BTN_HELP), KeyboardButton(MENU_BTN_CITY)],
         [KeyboardButton(MENU_BTN_WEATHER), KeyboardButton(MENU_BTN_NEWS)],
-        [KeyboardButton(MENU_BTN_START), KeyboardButton(MENU_BTN_MAP)],
-        [KeyboardButton(MENU_BTN_MENU), KeyboardButton(MENU_BTN_GAME)],
         [KeyboardButton(MENU_BTN_REMIND)],
+        [KeyboardButton(MENU_BTN_START), KeyboardButton(MENU_BTN_CITY)],
+        [KeyboardButton(MENU_BTN_MENU)],
+        [KeyboardButton(MENU_BTN_HELP), KeyboardButton(MENU_BTN_GAME)],
     ]
     if WEATHER_APP_URL and WEATHER_APP_URL.startswith("https://"):
-        keyboard.append([KeyboardButton(MENU_BTN_WEATHER_APP)])
+        keyboard.insert(1, [KeyboardButton(MENU_BTN_WEATHER_APP)])
     return ReplyKeyboardMarkup(
         keyboard,
         resize_keyboard=True,
@@ -2033,20 +1897,32 @@ async def send_weather_only(
     context: ContextTypes.DEFAULT_TYPE, chat_id: int, city: City
 ) -> None:
     """Только погода по городу (каждый запрос — другая картинка из папки города)."""
+    weather_data = await get_weather_data(city)
+    temp = weather_data.get("temp") if weather_data else None
+    temp_str = f"{temp:+.0f}°C" if temp is not None else ""
+    caption = f"🏛 {city.name_ru}"
+    if temp_str:
+        caption += f"\nСейчас: {temp_str}"
     try:
         img_bytes = _get_random_city_image_bytes(city, chat_id=chat_id)
         await context.bot.send_photo(
             chat_id=chat_id,
             photo=InputFile(io.BytesIO(img_bytes), filename=f"{city.slug}.png"),
-            caption=f"🏛 {city.name_ru}",
+            caption=caption,
         )
     except Exception as exc:
         logger.warning("Historic center image for %s: %s", city.slug, exc)
     weather_text = await get_weather(city)
-    # Кнопка для показа прогноза на 7 дней по запросу пользователя.
-    weekly_btn = InlineKeyboardMarkup(
-        [[InlineKeyboardButton("📅 Показать погоду на 7 дней", callback_data=f"weekly:{city.slug}")]]
-    )
+    # Кнопка для показа прогноза на 7 дней + быстрые города (ещё Москва, СПб, …).
+    quick_slugs = [s for s in TOP_10_CITY_SLUGS if s != city.slug][:3]
+    quick_btns = [
+        InlineKeyboardButton(RUSSIAN_MILLION_PLUS_CITIES[s].name_ru, callback_data=f"weather:{s}")
+        for s in quick_slugs if s in RUSSIAN_MILLION_PLUS_CITIES
+    ]
+    buttons = [[InlineKeyboardButton("📅 Показать погоду на 7 дней", callback_data=f"weekly:{city.slug}")]]
+    if quick_btns:
+        buttons.append(quick_btns)
+    weekly_btn = InlineKeyboardMarkup(buttons)
     try:
         await context.bot.send_message(
             chat_id=chat_id,
@@ -2059,6 +1935,20 @@ async def send_weather_only(
             chat_id=chat_id,
             text=weather_text,
             reply_markup=weekly_btn,
+        )
+    # Достижения: отслеживаем просмотр городов
+    ud = context.user_data
+    seen = ud.get("cities_viewed") or set()
+    if isinstance(seen, list):
+        seen = set(seen)
+    seen.add(city.slug)
+    ud["cities_viewed"] = list(seen)
+    if len(seen) >= 5 and not ud.get("achievement_cities_5"):
+        ud["achievement_cities_5"] = True
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="🏆 **Достижение: Погодный путешественник** — вы посмотрели погоду в 5 городах!",
+            parse_mode=ParseMode.MARKDOWN,
         )
 
 
@@ -2083,30 +1973,6 @@ async def send_news_only(
         )
 
 
-async def send_weather_map(
-    context: ContextTypes.DEFAULT_TYPE, chat_id: int
-) -> None:
-    """Генерирует и отправляет карту России с погодой по регионам (городам-миллионникам)."""
-    try:
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="Загружаю погоду по регионам России…",
-        )
-        weather_by_slug = await get_all_cities_weather()
-        map_bytes = _generate_russia_weather_map_bytes(weather_by_slug)
-        await context.bot.send_photo(
-            chat_id=chat_id,
-            photo=InputFile(io.BytesIO(map_bytes), filename="map_weather.png"),
-            caption="🌡 Погода по регионам России (города 500 тыс.+). Цвет круга — температура, иконка — погода (☀️ ясно, ☁️ облачно, 🌧 дождь, ❄️ снег).",
-        )
-    except Exception as exc:
-        logger.exception("Карта погоды: %s", exc)
-        await context.bot.send_message(
-            chat_id=chat_id,
-            text="Не удалось построить карту погоды. Попробуйте позже.",
-        )
-
-
 async def send_city_info(
     context: ContextTypes.DEFAULT_TYPE, chat_id: int, city: City
 ) -> None:
@@ -2118,13 +1984,22 @@ async def send_city_info(
 # Метка версии: если пользователь видит это в чате — бот запущен из ЭТОГО кода (tg bot2 / russian-weather-tg-bot)
 _START_VERSION_MARKER = "Версия 2.0 • tg bot2 • 27.02.2025"
 
+_START_GREETINGS = (
+    "Привет! Я бот погоды и новостей по городам России (500 тыс.+ жителей).",
+    "Здравствуйте! Погода и новости по городам России — выбирайте город и смотрите актуальную информацию.",
+    "Добро пожаловать! Здесь вы найдёте погоду и новости по городам России с населением от 500 тыс.+.",
+    "Привет! Узнайте погоду и последние новости по любому крупному городу России.",
+    "Рад видеть! Я подскажу погоду и новости по городам России — просто выберите город.",
+)
+
 async def _send_start_content(
     context: ContextTypes.DEFAULT_TYPE, chat_id: int
 ) -> None:
     """Отправляет карту России и блок меню. Меню внизу экрана отправляется отдельным сообщением для надёжного отображения."""
+    greeting = random.choice(_START_GREETINGS)
     caption = (
         f"🗺 **Карта России** • {_START_VERSION_MARKER}\n\n"
-        "Привет! Я бот погоды и новостей по городам России (500 тыс.+ жителей).\n\n"
+        f"{greeting}\n\n"
         "**Команды:** /start — старт и карта, /menu — меню, /city — выбор города, "
         "/weather — погода, /news — новости, /help — справка.\n\n"
         "⬇️ **Под картой придёт сообщение с кнопками меню** (Справка, Выбор города, Погода, Новости и др.) — они закрепятся внизу экрана."
@@ -2196,10 +2071,12 @@ async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "/city — выбор города (погода и новости)\n"
         "/weather — погода по городу (сейчас + 7 дней вперёд)\n"
         "/news — новости по городу\n"
-        "/map — карта России с погодой по регионам\n"
         "/game — мини-игра Pac-Man\n"
         "/app — погода (мини-приложение)\n"
-        "/remind — напоминание о погоде на день (утро/день/вечер/ночь)"
+        "/remind — напоминание о погоде на день (утро/день/вечер/ночь)\n"
+        "/quiz — викторина: угадай город по погоде\n"
+        "/dice — удача на сегодня (кубик)\n"
+        "/help — справка"
     )
     await update.message.reply_text(text, parse_mode=ParseMode.MARKDOWN)
 
@@ -2226,14 +2103,6 @@ async def city_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         "Выберите город (погода и новости):",
         reply_markup=keyboard,
     )
-
-
-async def map_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Команда /map — карта России с погодой по регионам."""
-    chat_id = update.effective_chat.id if update.effective_chat else None
-    if chat_id is None:
-        return
-    await send_weather_map(context, chat_id)
 
 
 async def game_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -2268,6 +2137,44 @@ async def game_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
             ]),
             parse_mode=ParseMode.MARKDOWN,
         )
+
+
+async def quiz_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Викторина: угадай город по погоде (температура и описание)."""
+    chat_id = update.effective_chat.id if update.effective_chat else None
+    if chat_id is None:
+        return
+    cities_list = [RUSSIAN_MILLION_PLUS_CITIES[s] for s in TOP_10_CITY_SLUGS if s in RUSSIAN_MILLION_PLUS_CITIES]
+    if len(cities_list) < 4:
+        await update.message.reply_text("Недостаточно городов для викторины.")
+        return
+    correct_city = random.choice(cities_list)
+    data = await get_weather_data(correct_city)
+    if not data:
+        await update.message.reply_text("Не удалось загрузить погоду для викторины. Попробуйте позже.")
+        return
+    temp = data.get("temp")
+    desc = (data.get("desc") or "без осадков").capitalize()
+    temp_str = f"{temp:+.0f}°C" if temp is not None else "—"
+    others = [c for c in cities_list if c.slug != correct_city]
+    options = [correct_city] + random.sample(others, 3)
+    random.shuffle(options)
+    context.user_data["quiz_correct"] = correct_city.slug
+    buttons = [[InlineKeyboardButton(c.name_ru, callback_data=f"quiz_ans:{c.slug}")] for c in options]
+    await update.message.reply_text(
+        f"🎯 **Угадайте город по погоде**\n\nТемпература: {temp_str}, {desc}.\n\nКакой это город?",
+        reply_markup=InlineKeyboardMarkup(buttons),
+        parse_mode=ParseMode.MARKDOWN,
+    )
+
+
+async def dice_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Отправляет кубик «Погода на сегодня: удача»."""
+    chat_id = update.effective_chat.id if update.effective_chat else None
+    if chat_id is None:
+        return
+    await context.bot.send_message(chat_id=chat_id, text="Погода на сегодня: удача 🎲")
+    await context.bot.send_dice(chat_id=chat_id, emoji="🎲")
 
 
 async def app_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
@@ -2324,7 +2231,7 @@ async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> No
         parse_mode=ParseMode.MARKDOWN,
     )
     await update.message.reply_text(
-        "⬇️ Кнопки меню внизу экрана.",
+        "⬇️ Кнопки меню внизу экрана. Что показать?",
         reply_markup=build_reply_menu_keyboard(),
     )
 
@@ -2402,6 +2309,14 @@ async def handle_remind_time_message(update: Update, context: ContextTypes.DEFAU
         text=f"✅ Готово. Каждый день в **{time_str}** (ваше время — {tz_label}) будет приходить прогноз по {name}.",
         parse_mode=ParseMode.MARKDOWN,
     )
+    ud = context.user_data
+    if not ud.get("achievement_remind"):
+        ud["achievement_remind"] = True
+        await context.bot.send_message(
+            chat_id=chat_id,
+            text="🏆 **Достижение: Пунктуальность** — вы включили напоминание о погоде!",
+            parse_mode=ParseMode.MARKDOWN,
+        )
     # Прогноз будет приходить в заданное время через планировщик напоминаний.
     return True
 
@@ -2431,12 +2346,11 @@ async def menu_reply_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
             text=(
                     "Я показываю погоду и новости по городам России (500 тыс.+). Топ‑10 в списке или 🔍 поиск по названию.\n\n"
                 "**Команды:**\n"
-                "/start — приветствие и карта России\n"
-                "/menu — открыть блок меню\n"
-                "/city — выбор города (погода и новости)\n"
-                "/weather — погода по городу\n"
-                "/news — новости по городу\n"
-                    "/map — карта с погодой по регионам\n"
+                    "/start — приветствие и карта России\n"
+                    "/menu — открыть блок меню\n"
+                    "/city — выбор города (погода и новости)\n"
+                    "/weather — погода по городу\n"
+                    "/news — новости по городу\n"
                     "/game — мини-игра Pac-Man\n"
                     "/app — погода (мини-приложение)\n"
                     "/remind — напоминание о погоде на день\n"
@@ -2464,12 +2378,10 @@ async def menu_reply_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
         )
     elif text == MENU_BTN_START:
         await _send_start_content(context, chat_id)
-    elif text == MENU_BTN_MAP:
-        await send_weather_map(context, chat_id)
     elif text == MENU_BTN_MENU:
         await context.bot.send_message(
             chat_id=chat_id,
-            text="📋 **Меню** — выберите действие:",
+            text="📋 **Меню** — выберите действие. Что показать?",
             reply_markup=build_main_menu_keyboard(),
             parse_mode=ParseMode.MARKDOWN,
         )
@@ -2578,7 +2490,6 @@ async def city_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
                     "/city — выбор города (погода и новости)\n"
                     "/weather — погода по городу\n"
                     "/news — новости по городу\n"
-                    "/map — карта с погодой по регионам\n"
                     "/game — мини-игра Pac-Man\n"
                     "/app — погода (мини-приложение)\n"
                     "/remind — напоминание о погоде на день (утро/день/вечер/ночь)\n"
@@ -2607,12 +2518,10 @@ async def city_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
             )
         elif slug == "start":
             await _send_start_content(context, chat_id)
-        elif slug == "map":
-            await send_weather_map(context, chat_id)
         elif slug == "menu":
             await context.bot.send_message(
                 chat_id=chat_id,
-                text="📋 **Меню** — выберите действие:",
+                text="📋 **Меню** — выберите действие. Что показать?",
                 reply_markup=build_main_menu_keyboard(),
                 parse_mode=ParseMode.MARKDOWN,
             )
@@ -2744,6 +2653,14 @@ async def city_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
             text=f"✅ Готово. Каждый день в **{time_str}** (ваше время — {tz_label}) будет приходить прогноз по {name} (утро, день, вечер, ночь).",
             parse_mode=ParseMode.MARKDOWN,
         )
+        ud = context.user_data
+        if not ud.get("achievement_remind"):
+            ud["achievement_remind"] = True
+            await context.bot.send_message(
+                chat_id=chat_id,
+                text="🏆 **Достижение: Пунктуальность** — вы включили напоминание о погоде!",
+                parse_mode=ParseMode.MARKDOWN,
+            )
         # Первый прогноз придёт в заданное время через планировщик напоминаний.
         return
 
@@ -2769,6 +2686,17 @@ async def city_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
             await context.bot.send_message(chat_id=chat_id, text=f"❌ Напоминание по {name} отменено.")
         else:
             await context.bot.send_message(chat_id=chat_id, text=f"Напоминание по {name} не найдено.")
+        return
+
+    if prefix == "quiz_ans":
+        correct_slug = context.user_data.pop("quiz_correct", None)
+        city = get_city_by_slug(slug)
+        correct_city = get_city_by_slug(correct_slug) if correct_slug else None
+        if correct_slug and city and correct_city:
+            if slug == correct_slug:
+                await query.edit_message_text(f"✅ Верно! Это **{correct_city.name_ru}**.", parse_mode=ParseMode.MARKDOWN)
+            else:
+                await query.edit_message_text(f"❌ Нет. Это был **{correct_city.name_ru}**.", parse_mode=ParseMode.MARKDOWN)
         return
 
     if prefix == "weekly":
@@ -2833,10 +2761,11 @@ BOT_COMMANDS_MENU: List[BotCommand] = [
     BotCommand("city", "Выбор города (погода и новости)"),
     BotCommand("weather", "Погода по городу"),
     BotCommand("news", "Новости по городу"),
-    BotCommand("map", "Карта России с погодой по регионам"),
     BotCommand("game", "Мини-игра Pac-Man"),
     BotCommand("app", "Погода — мини-приложение"),
     BotCommand("remind", "Напоминание о погоде на день"),
+    BotCommand("quiz", "Викторина: угадай город по погоде"),
+    BotCommand("dice", "Удача на сегодня (кубик)"),
     BotCommand("help", "Справка по командам"),
 ]
 
@@ -2894,10 +2823,11 @@ def main() -> None:
     app.add_handler(CommandHandler("weather", weather_command))
     app.add_handler(CommandHandler("news", news_command))
     app.add_handler(CommandHandler("city", city_command))
-    app.add_handler(CommandHandler("map", map_command))
     app.add_handler(CommandHandler("game", game_command))
     app.add_handler(CommandHandler("app", app_command))
     app.add_handler(CommandHandler("remind", remind_command))
+    app.add_handler(CommandHandler("quiz", quiz_command))
+    app.add_handler(CommandHandler("dice", dice_command))
     app.add_handler(CallbackQueryHandler(city_button_handler))
     app.add_handler(MessageHandler(filters.TEXT, text_message_handler))
 

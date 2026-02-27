@@ -94,10 +94,22 @@
       "historic_" + slug + ".png",
       "historic_" + slug + "_2.png",
       "historic_" + slug + "_3.png",
+      "historic_" + slug + "_4.png",
+      "historic_" + slug + "_5.png",
+      "historic_" + slug + "_6.png",
+      "historic_" + slug + "_7.png",
+      "historic_" + slug + "_8.png",
+      "historic_" + slug + "_9.png",
+      "historic_" + slug + "_10.png",
       "landmark_" + slug + "_1.png",
       "landmark_" + slug + "_2.png",
+      "landmark_" + slug + "_3.png",
       "city_" + slug + "_1.png",
-      "city_" + slug + "_2.png"
+      "city_" + slug + "_2.png",
+      "city_" + slug + "_3.png",
+      "city_" + slug + "_4.png",
+      "city_" + slug + "_5.png",
+      "city_" + slug + "_6.png"
     ];
   }
   function openMapApp(citySlug) {
@@ -168,8 +180,8 @@
       var icon = L.divIcon({
         className: "city-marker-div",
         html: makeMarkerHtml(c.name_ru, tempStr),
-        iconSize: [110, 58],
-        iconAnchor: [55, 56]
+        iconSize: [140, 72],
+        iconAnchor: [70, 70]
       });
       var m = L.marker([c.lat, c.lon], { icon: icon });
       var weatherUrl = "#/city/" + encodeURIComponent(c.slug);
@@ -183,8 +195,8 @@
         m.setIcon(L.divIcon({
           className: "city-marker-div",
           html: makeMarkerHtml(c.name_ru, str),
-          iconSize: [110, 58],
-          iconAnchor: [55, 56]
+          iconSize: [140, 72],
+          iconAnchor: [70, 70]
         }));
         var newTempText = (t != null ? (t > 0 ? "+" : "") + t + " °C" : "—");
         m.setPopupContent("<div class=\"popup-title\">" + escapeHtml(c.name_ru) + "</div>" +
