@@ -12,6 +12,7 @@
   var TELEGRAM_BOT_URL = window.TELEGRAM_BOT_URL || "https://t.me/Russianweather1_bot";
 
   let cities = [];
+  let cityEmblems = {};
 
   function lonLatToPercent(lon, lat) {
     var lonMin = MAP_EXTENT.lonMin, latMin = MAP_EXTENT.latMin, lonMax = MAP_EXTENT.lonMax, latMax = MAP_EXTENT.latMax;
@@ -62,6 +63,17 @@
       cities = data;
       return cities;
     });
+  }
+
+  function loadEmblems() {
+    var base = getBaseUrl();
+    return fetch(base + "emblems.json").then(function (r) {
+      if (!r.ok) return {};
+      return r.json();
+    }).then(function (data) {
+      cityEmblems = data || {};
+      return cityEmblems;
+    }).catch(function () { return {}; });
   }
 
   /** Поиск городов по названию (name_ru или slug). Возвращает массив подходящих городов. */
@@ -124,23 +136,19 @@
     ];
   }
 
-  /** Уникальный символ города для шапки и списков (посередине как указано пользователем). */
+  /** Официальный символ города: герб (из emblems.json) или нейтральный символ. */
   function getCitySymbol(slug) {
-    var symbols = {
-      moscow: "\u{1F3DB}", spb: "\u{26F2}", novosibirsk: "\u{1F3AD}", yekaterinburg: "\u{26EA}", kazan: "\u{1F54C}",
-      krasnoyarsk: "\u{26F0}", nizhny_novgorod: "\u{1F3D8}", chelyabinsk: "\u{1F3ED}", ufa: "\u{1F4CD}", krasnodar: "\u{1F3D6}",
-      samara: "\u{2693}", rostov_on_don: "\u{1F6A4}", omsk: "\u{1F3E2}", voronezh: "\u{1F30A}", perm: "\u{1F3F0}",
-      volgograd: "\u{1F4AA}", saratov: "\u{1F3A4}", tyumen: "\u{1F3D7}", tolyatti: "\u{1F697}", mahachkala: "\u{1F54C}",
-      barnaul: "\u{1F333}", izhevsk: "\u{2692}", khabarovsk: "\u{1F6E5}", ulyanovsk: "\u{1F4DA}", irkutsk: "\u{1F30A}",
-      vladivostok: "\u{1F6A4}", yaroslavl: "\u{1F3D8}", stavropol: "\u{1F3D6}", sevastopol: "\u{2693}", naberezhnye_chelny: "\u{1F54C}",
-      tomsk: "\u{1F332}", balashikha: "\u{1F3E0}", kemerovo: "\u{26CF}", orenburg: "\u{1F3D8}", novokuznetsk: "\u{26CF}",
-      ryazan: "\u{1F3D8}", donetsk: "\u{1F4CD}", luhansk: "\u{1F4CD}", tula: "\u{2694}", kirov: "\u{1F3D8}", kaliningrad: "\u{1F3F0}",
-      bryansk: "\u{1F3D8}", kursk: "\u{1F3D8}", magnitogorsk: "\u{2692}", sochi: "\u{1F3D6}", vladikavkaz: "\u{26F0}", grozny: "\u{1F3D8}",
-      tambov: "\u{1F3D8}", ivanovo: "\u{1F3ED}", tver: "\u{1F3D8}", simferopol: "\u{1F3D8}", kostroma: "\u{1F54C}",
-      volzhsky: "\u{1F30A}", taganrog: "\u{2693}", sterlitamak: "\u{1F3ED}", komsomolsk_na_amure: "\u{1F6A4}", petrozavodsk: "\u{1F3D6}",
-      lipetsk: "\u{2692}", arhangelsk: "\u{2693}", cheboksary: "\u{1F3D8}", kaluga: "\u{1F3D8}", smolensk: "\u{1F3D8}"
-    };
-    return symbols[slug] || "\u{1F3D8}";
+    var url = cityEmblems[slug];
+    if (url) {
+      return "<img src=\"" + url.replace(/"/g, "&quot;") + "\" class=\"city-marker-emblem\" alt=\"\" loading=\"lazy\" onerror=\"this.outerHTML='&#127963;';\">";
+    }
+    return "\u{1F3DB}";
+  }
+
+  function getCitySymbolRaw(slug) {
+    var url = cityEmblems[slug];
+    if (url) return "<img src=\"" + url.replace(/"/g, "&quot;") + "\" class=\"city-marker-emblem city-marker-emblem-inline\" alt=\"\" loading=\"lazy\" onerror=\"this.outerHTML='&#127963;';\">";
+    return "\u{1F3DB}";
   }
 
   function openMapApp(citySlug) {
@@ -170,7 +178,7 @@
   }
 
   function makeMarkerHtml(name, tempStr, symbol) {
-    var sym = symbol || "\u{1F3D8}";
+    var sym = symbol !== undefined && symbol !== null ? symbol : "\u{1F3DB}";
     return "<div class=\"city-marker-wrap\">" +
       "<div class=\"city-marker-symbol\">" + sym + "</div>" +
       "<div class=\"city-marker-temp\">" + escapeHtml(tempStr) + "</div>" +
@@ -218,7 +226,7 @@
       });
       var m = L.marker([c.lat, c.lon], { icon: icon });
       var weatherUrl = "#/city/" + encodeURIComponent(c.slug);
-      var popupHtml = "<div class=\"popup-title\">" + getCitySymbol(c.slug) + " " + escapeHtml(c.name_ru) + "</div>" +
+      var popupHtml = "<div class=\"popup-title\">" + getCitySymbolRaw(c.slug) + " " + escapeHtml(c.name_ru) + "</div>" +
         "<div class=\"popup-temp\">— °C</div>" +
         "<div class=\"popup-actions\"><a href=\"" + weatherUrl + "\">Погода</a></div>";
       m.bindPopup(popupHtml);
@@ -232,7 +240,7 @@
           iconAnchor: [70, 70]
         }));
         var newTempText = (t != null ? (t > 0 ? "+" : "") + t + " °C" : "—");
-        m.setPopupContent("<div class=\"popup-title\">" + getCitySymbol(c.slug) + " " + escapeHtml(c.name_ru) + "</div>" +
+        m.setPopupContent("<div class=\"popup-title\">" + getCitySymbolRaw(c.slug) + " " + escapeHtml(c.name_ru) + "</div>" +
           "<div class=\"popup-temp\">" + newTempText + "</div>" +
           "<div class=\"popup-actions\"><a href=\"" + weatherUrl + "\">Погода</a></div>");
       });
@@ -345,7 +353,7 @@
         var li = document.createElement("li");
         var a = document.createElement("a");
         a.href = "#/city/" + encodeURIComponent(c.slug);
-        a.innerHTML = "<span class=\"city-emoji\" data-slug=\"" + escapeHtml(c.slug) + "\">" + getCitySymbol(c.slug) + "</span><span>" + escapeHtml(c.name_ru) + "</span><div class=\"temp\" data-slug=\"" + escapeHtml(c.slug) + "\">—</div>";
+        a.innerHTML = "<span class=\"city-emoji\" data-slug=\"" + escapeHtml(c.slug) + "\">" + getCitySymbolRaw(c.slug) + "</span><span>" + escapeHtml(c.name_ru) + "</span><div class=\"temp\" data-slug=\"" + escapeHtml(c.slug) + "\">—</div>";
         li.appendChild(a);
         listEl.appendChild(li);
       });
@@ -540,6 +548,8 @@
     if (start && start.length) window.location.hash = "#/city/" + encodeURIComponent(start);
   }
   loadCities().then(function () {
+    return loadEmblems();
+  }).then(function () {
     var start = tg && tg.initDataUnsafe && tg.initDataUnsafe.start_param;
     if (start && start.length) window.location.hash = "#/city/" + encodeURIComponent(start);
     route();

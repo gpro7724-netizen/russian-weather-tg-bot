@@ -12,6 +12,7 @@
   var map = null;
   var slugToMarker = {};
   var citiesData = [];
+  var cityEmblems = {};
 
   function getBaseUrl() {
     var path = window.location.pathname;
@@ -32,6 +33,17 @@
     });
   }
 
+  function loadEmblems() {
+    var url = getBaseUrl() + "../weather_app/emblems.json";
+    return fetch(url).then(function (r) {
+      if (!r.ok) return {};
+      return r.json();
+    }).then(function (data) {
+      cityEmblems = data || {};
+      return cityEmblems;
+    }).catch(function () { return {}; });
+  }
+
   function fetchCurrentTemp(lat, lon) {
     return fetch(OPEN_METEO + "?" + new URLSearchParams({
       latitude: lat,
@@ -49,25 +61,19 @@
   }
 
   function getCitySymbol(slug) {
-    var symbols = {
-      moscow: "\u{1F3DB}", spb: "\u{26F2}", novosibirsk: "\u{1F3AD}", yekaterinburg: "\u{26EA}", kazan: "\u{1F54C}",
-      krasnoyarsk: "\u{26F0}", nizhny_novgorod: "\u{1F3D8}", chelyabinsk: "\u{1F3ED}", ufa: "\u{1F4CD}", krasnodar: "\u{1F3D6}",
-      samara: "\u{2693}", rostov_on_don: "\u{1F6A4}", omsk: "\u{1F3E2}", voronezh: "\u{1F30A}", perm: "\u{1F3F0}",
-      volgograd: "\u{1F4AA}", saratov: "\u{1F3A4}", tyumen: "\u{1F3D7}", tolyatti: "\u{1F697}", mahachkala: "\u{1F54C}",
-      barnaul: "\u{1F333}", izhevsk: "\u{2692}", khabarovsk: "\u{1F6E5}", ulyanovsk: "\u{1F4DA}", irkutsk: "\u{1F30A}",
-      vladivostok: "\u{1F6A4}", yaroslavl: "\u{1F3D8}", stavropol: "\u{1F3D6}", sevastopol: "\u{2693}", naberezhnye_chelny: "\u{1F54C}",
-      tomsk: "\u{1F332}", balashikha: "\u{1F3E0}", kemerovo: "\u{26CF}", orenburg: "\u{1F3D8}", novokuznetsk: "\u{26CF}",
-      ryazan: "\u{1F3D8}", donetsk: "\u{1F4CD}", luhansk: "\u{1F4CD}", tula: "\u{2694}", kirov: "\u{1F3D8}", kaliningrad: "\u{1F3F0}",
-      bryansk: "\u{1F3D8}", kursk: "\u{1F3D8}", magnitogorsk: "\u{2692}", sochi: "\u{1F3D6}", vladikavkaz: "\u{26F0}", grozny: "\u{1F3D8}",
-      tambov: "\u{1F3D8}", ivanovo: "\u{1F3ED}", tver: "\u{1F3D8}", simferopol: "\u{1F3D8}", kostroma: "\u{1F54C}",
-      volzhsky: "\u{1F30A}", taganrog: "\u{2693}", sterlitamak: "\u{1F3ED}", komsomolsk_na_amure: "\u{1F6A4}", petrozavodsk: "\u{1F3D6}",
-      lipetsk: "\u{2692}", arhangelsk: "\u{2693}", cheboksary: "\u{1F3D8}", kaluga: "\u{1F3D8}", smolensk: "\u{1F3D8}"
-    };
-    return symbols[slug] || "\u{1F3D8}";
+    var url = cityEmblems[slug];
+    if (url) return "<img src=\"" + url.replace(/"/g, "&quot;") + "\" class=\"city-marker-emblem\" alt=\"\" loading=\"lazy\" onerror=\"this.outerHTML='&#127963;';\">";
+    return "\u{1F3DB}";
+  }
+
+  function getCitySymbolPopup(slug) {
+    var url = cityEmblems[slug];
+    if (url) return "<img src=\"" + url.replace(/"/g, "&quot;") + "\" class=\"city-marker-emblem-inline\" alt=\"\" loading=\"lazy\" onerror=\"this.outerHTML='&#127963;';\">";
+    return "\u{1F3DB}";
   }
 
   function makeMarkerHtml(name, tempStr, symbol) {
-    var sym = symbol || "\u{1F3D8}";
+    var sym = symbol !== undefined && symbol !== null ? symbol : "\u{1F3DB}";
     return "<div class=\"city-marker-wrap\">" +
       "<div class=\"city-marker-symbol\">" + sym + "</div>" +
       "<div class=\"city-marker-temp\">" + escapeHtml(tempStr) + "</div>" +
@@ -108,7 +114,7 @@
       var m = L.marker([c.lat, c.lon], { icon: icon });
 
       var popupHtml =
-        "<div class=\"popup-title\">" + getCitySymbol(c.slug) + " " + escapeHtml(c.name_ru) + "</div>" +
+        "<div class=\"popup-title\">" + getCitySymbolPopup(c.slug) + " " + escapeHtml(c.name_ru) + "</div>" +
         "<div class=\"popup-temp\">— °C</div>" +
         "<div class=\"popup-actions\"><a href=\"" + weatherUrlBase + encodeURIComponent(c.slug) + "\" data-slug=\"" + c.slug + "\">Открыть погоду</a></div>";
 
@@ -126,7 +132,7 @@
         }));
         var newTempText = (t != null ? (t > 0 ? "+" : "") + t + " °C" : "—");
         var newPopupHtml =
-          "<div class=\"popup-title\">" + getCitySymbol(c.slug) + " " + escapeHtml(c.name_ru) + "</div>" +
+          "<div class=\"popup-title\">" + getCitySymbolPopup(c.slug) + " " + escapeHtml(c.name_ru) + "</div>" +
           "<div class=\"popup-temp\">" + newTempText + "</div>" +
           "<div class=\"popup-actions\"><a href=\"" + weatherUrlBase + encodeURIComponent(c.slug) + "\" data-slug=\"" + c.slug + "\">Открыть погоду</a></div>";
         m.setPopupContent(newPopupHtml);
@@ -195,8 +201,9 @@
     });
   }
 
-  loadCities()
-    .then(initMap)
+  loadCities().then(function (cities) {
+    return loadEmblems().then(function () { return cities; });
+  }).then(initMap)
     .catch(function (e) {
       console.error(e);
       document.getElementById("map").innerHTML =

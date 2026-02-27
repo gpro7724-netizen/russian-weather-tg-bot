@@ -12,6 +12,7 @@
   const TELEGRAM_BOT_URL = window.TELEGRAM_BOT_URL || "https://t.me/Russianweather1_bot";
 
   let cities = [];
+  let cityEmblems = {};
   let homeMap = null;
   let cityMap = null;
 
@@ -36,6 +37,18 @@
       cities = data;
       return cities;
     });
+  }
+
+  function loadEmblems() {
+    var base = getBaseUrl();
+    var url = base + "../weather_app/emblems.json";
+    return fetch(url).then(function (r) {
+      if (!r.ok) return {};
+      return r.json();
+    }).then(function (data) {
+      cityEmblems = data || {};
+      return cityEmblems;
+    }).catch(function () { return {}; });
   }
 
   /** Поиск городов по названию (name_ru или slug). */
@@ -85,8 +98,16 @@
     return div.innerHTML;
   }
 
-  function makeMarkerHtml(name, tempStr) {
+  function getCitySymbol(slug) {
+    var url = cityEmblems[slug];
+    if (url) return "<img src=\"" + url.replace(/"/g, "&quot;") + "\" class=\"city-marker-emblem\" alt=\"\" loading=\"lazy\" onerror=\"this.outerHTML='&#127963;';\">";
+    return "\u{1F3DB}";
+  }
+
+  function makeMarkerHtml(name, tempStr, symbol) {
+    var sym = symbol !== undefined && symbol !== null ? symbol : "\u{1F3DB}";
     return "<div class=\"city-marker-wrap\">" +
+      "<div class=\"city-marker-symbol\">" + sym + "</div>" +
       "<div class=\"city-marker-temp\">" + escapeHtml(tempStr) + "</div>" +
       "<div class=\"city-marker-name\">" + escapeHtml(name) + "</div>" +
       "<div class=\"city-marker-dot\"></div>" +
@@ -131,7 +152,7 @@
       var tempStr = "—°";
       var icon = L.divIcon({
         className: "city-marker-div",
-        html: makeMarkerHtml(c.name_ru, tempStr),
+        html: makeMarkerHtml(c.name_ru, tempStr, getCitySymbol(c.slug)),
         iconSize: [110, 58],
         iconAnchor: [55, 56]
       });
@@ -149,7 +170,7 @@
         var str = (t != null ? (t > 0 ? "+" : "") + t + "°" : "—°");
         m.setIcon(L.divIcon({
           className: "city-marker-div",
-          html: makeMarkerHtml(c.name_ru, str),
+          html: makeMarkerHtml(c.name_ru, str, getCitySymbol(c.slug)),
           iconSize: [110, 58],
           iconAnchor: [55, 56]
         }));
@@ -395,6 +416,7 @@
 
   setLoading(true);
   loadCities()
+    .then(function () { return loadEmblems(); })
     .then(function () {
       setLogoLink();
       setLoading(false);

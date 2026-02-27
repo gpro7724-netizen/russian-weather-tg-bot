@@ -267,6 +267,20 @@ body {
   line-height: 0;
 }
 
+.city-marker-wrap .city-marker-symbol {
+  font-size: 14px;
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.city-marker-wrap .city-marker-symbol .city-marker-emblem {
+  display: block;
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  margin: 0 auto 2px;
+}
+
 .city-marker-wrap .city-marker-temp {
   display: inline-block;
   font-size: 15px;
