@@ -2,6 +2,7 @@ import asyncio
 import io
 import json
 import logging
+import math
 import os
 import random
 import re
@@ -150,7 +151,27 @@ TOP_10_CITY_SLUGS: List[str] = [
     "nizhny_novgorod", "chelyabinsk", "ufa", "krasnodar",
 ]
 
-# Часовой пояс (IANA) для каждого города — для актуального местного времени в сообщении о погоде
+
+def _haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+    """Расстояние между двумя точками на Земле в км (формула гаверсинусов)."""
+    R = 6371.0
+    phi1, phi2 = math.radians(lat1), math.radians(lat2)
+    dphi = math.radians(lat2 - lat1)
+    dlam = math.radians(lon2 - lon1)
+    a = math.sin(dphi / 2) ** 2 + math.cos(phi1) * math.cos(phi2) * math.sin(dlam / 2) ** 2
+    c = 2 * math.asin(min(1.0, math.sqrt(a)))
+    return R * c
+
+
+def get_nearest_city_slugs(city: City, limit: int = 3) -> List[str]:
+    """Возвращает slug'и limit городов из списка, ближайших к city (исключая сам город)."""
+    others = [(s, c) for s, c in RUSSIAN_MILLION_PLUS_CITIES.items() if s != city.slug]
+    with_dist = [(_s, _haversine_km(city.lat, city.lon, _c.lat, _c.lon)) for _s, _c in others]
+    with_dist.sort(key=lambda x: x[1])
+    return [s for s, _ in with_dist[:limit]]
+
+
+# Часовой пояс (IANA) для каждого города
 CITY_TIMEZONES: Dict[str, str] = {
     "moscow": "Europe/Moscow", "spb": "Europe/Moscow", "nizhny_novgorod": "Europe/Moscow", "kazan": "Europe/Moscow",
     "voronezh": "Europe/Moscow", "volgograd": "Europe/Moscow", "krasnodar": "Europe/Moscow", "rostov_on_don": "Europe/Moscow",
@@ -1780,8 +1801,8 @@ def build_main_menu_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton(MENU_BTN_REMIND, callback_data="menu:remind"),
         ],
         [
-            InlineKeyboardButton(MENU_BTN_CITY, callback_data="menu:city"),
             InlineKeyboardButton(MENU_BTN_START, callback_data="menu:start"),
+            InlineKeyboardButton(MENU_BTN_CITY, callback_data="menu:city"),
         ],
         [
             InlineKeyboardButton(MENU_BTN_MENU, callback_data="menu:menu"),
@@ -1913,8 +1934,8 @@ async def send_weather_only(
     except Exception as exc:
         logger.warning("Historic center image for %s: %s", city.slug, exc)
     weather_text = await get_weather(city)
-    # Кнопка для показа прогноза на 7 дней + быстрые города (ещё Москва, СПб, …).
-    quick_slugs = [s for s in TOP_10_CITY_SLUGS if s != city.slug][:3]
+    # Кнопка «7 дней» + 3 ближайших города к текущему (по расстоянию).
+    quick_slugs = get_nearest_city_slugs(city, limit=3)
     quick_btns = [
         InlineKeyboardButton(RUSSIAN_MILLION_PLUS_CITIES[s].name_ru, callback_data=f"weather:{s}")
         for s in quick_slugs if s in RUSSIAN_MILLION_PLUS_CITIES
@@ -2033,14 +2054,14 @@ async def _send_start_content(
     # Блок меню внизу экрана — отдельным сообщением (так клавиатура гарантированно показывается во всех клиентах)
     await context.bot.send_message(
         chat_id=chat_id,
-        text="📋 **Меню** — нажмите одну из кнопок внизу экрана:",
+        text="📋 **Меню** — кнопки внизу: сначала Погода и Новости, затем Приложение и Напоминание.",
         reply_markup=build_reply_menu_keyboard(),
         parse_mode=ParseMode.MARKDOWN,
     )
-    # Inline-кнопки под сообщением (дублируют меню)
+    # Inline-кнопки под сообщением (тот же порядок)
     await context.bot.send_message(
         chat_id=chat_id,
-        text="Или выберите действие кнопками под этим сообщением:",
+        text="Или выберите действие кнопками ниже:",
         reply_markup=build_main_menu_keyboard(),
     )
 
@@ -2226,12 +2247,12 @@ async def remind_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 async def menu_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     """Показывает главное меню и включает блок кнопок внизу экрана."""
     await update.message.reply_text(
-        "📋 **Меню** — выберите действие:",
+        "📋 **Меню** — сначала Погода и Новости, внизу Справка и Pac-Man:",
         reply_markup=build_main_menu_keyboard(),
         parse_mode=ParseMode.MARKDOWN,
     )
     await update.message.reply_text(
-        "⬇️ Кнопки меню внизу экрана. Что показать?",
+        "⬇️ Кнопки внизу экрана (тот же порядок). Что показать?",
         reply_markup=build_reply_menu_keyboard(),
     )
 
@@ -2833,6 +2854,7 @@ def main() -> None:
 
     logger.info("Starting Telegram weather/news bot...")
     logger.info("Если в /start видишь «Версия 2.0 • tg bot2 • 27.02.2025» — это эта сборка.")
+    logger.info("Меню: первая строка Погода + Новости, в конце Справка и Pac-Man.")
     app.run_polling(drop_pending_updates=False)
 
 

@@ -52,6 +52,41 @@
       font-size: 0.85rem;
       margin-left: auto;
     }
+    .header-search {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex: 1;
+      max-width: 220px;
+      margin: 0 12px;
+    }
+    .map-search-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 0.9rem;
+    }
+    .map-search-input:focus {
+      outline: none;
+      border-color: #0ea5e9;
+    }
+    .map-search-btn {
+      flex-shrink: 0;
+      width: 38px;
+      height: 38px;
+      border: none;
+      border-radius: 10px;
+      background: #0ea5e9;
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .map-search-btn:hover { opacity: 0.9; }
+    .map-search-btn:active { transform: scale(0.96); }
     #map {
       flex: 1;
       width: 100%;
@@ -118,6 +153,11 @@
       margin: 4px auto 0;
       box-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
+    .city-marker-wrap .city-marker-symbol {
+      font-size: 16px;
+      line-height: 1;
+      margin-bottom: 2px;
+    }
     /* Атрибуция с флагом РФ */
     .leaflet-control-attribution.leaflet-control a {
       font-size: 10px;
@@ -140,6 +180,10 @@
       </svg>
       <span class="logo-text">Погода России</span>
     </a>
+    <div class="header-search">
+      <input type="text" id="mapSearchInput" class="map-search-input" placeholder="Поиск города..." autocomplete="off">
+      <button type="button" id="mapSearchBtn" class="map-search-btn" aria-label="Найти город">🔍</button>
+    </div>
     <span>нажмите по городу — откроется погода</span>
   </header>
   <div id="map"></div>

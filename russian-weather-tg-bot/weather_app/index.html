@@ -32,6 +32,23 @@
       flex-wrap: wrap;
       gap: 8px;
     }
+    .header.header-city {
+      position: relative;
+    }
+    .header.header-city .back-link { flex-shrink: 0; }
+    .header.header-city .header-city-symbol {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.75rem;
+      line-height: 1;
+      pointer-events: none;
+    }
+    .header.header-city h1 {
+      flex: 1;
+      text-align: right;
+      padding-left: 2.5rem;
+    }
     .header h1 { font-size: 1.25rem; font-weight: 600; }
     .back-link {
       color: var(--link, #6eb5ff);
@@ -79,6 +96,50 @@
     .landing .map-section h3 { font-size: 0.95rem; color: #aaa; margin-bottom: 8px; }
     .landing .map-wrap.map-landing { border-radius: 12px; overflow: hidden; background: rgba(0,0,0,0.2); height: 420px; }
     .landing .map-wrap.map-landing .leaflet-container { width: 100%; height: 100%; }
+
+    /* Поиск города (лупа) */
+    .search-wrap {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+      max-width: 320px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .search-input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.08);
+      color: var(--text, #eee);
+      font-size: 1rem;
+    }
+    .search-input::placeholder { color: #888; }
+    .search-input:focus {
+      outline: none;
+      border-color: var(--accent, #87ceeb);
+      background: rgba(255,255,255,0.1);
+    }
+    .search-btn {
+      flex-shrink: 0;
+      width: 44px;
+      height: 44px;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #4a90d9 0%, #357abd 100%);
+      color: #fff;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.15s, opacity 0.15s;
+    }
+    .search-btn:hover { opacity: 0.95; }
+    .search-btn:active { transform: scale(0.96); }
+    .header + .search-wrap { margin-top: 4px; }
 
     /* City list */
     .city-list {
@@ -194,6 +255,9 @@
     .city-marker-wrap .city-marker-dot {
       width: 14px; height: 14px; background: #e74c3c; border: 2px solid #fff; border-radius: 50%;
       margin: 4px auto 0; box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+    }
+    .city-marker-wrap .city-marker-symbol {
+      font-size: 16px; line-height: 1; margin-bottom: 2px;
     }
     .app-logo {
       display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: #0ea5e9;

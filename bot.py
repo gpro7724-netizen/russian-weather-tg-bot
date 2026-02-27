@@ -845,30 +845,33 @@ MENU_BUTTON_TEXTS = frozenset(
 
 
 def build_main_menu_keyboard() -> InlineKeyboardMarkup:
-    """Блок меню (inline): сетка 2×3, все команды подписаны."""
+    """Блок меню (inline): порядок — Погода/Новости, Старт и карта/Выбор города, Меню, Справка."""
     buttons: List[List[InlineKeyboardButton]] = [
-        [
-            InlineKeyboardButton(MENU_BTN_HELP, callback_data="menu:help"),
-            InlineKeyboardButton(MENU_BTN_CITY, callback_data="menu:city"),
-        ],
         [
             InlineKeyboardButton(MENU_BTN_WEATHER, callback_data="menu:weather"),
             InlineKeyboardButton(MENU_BTN_NEWS, callback_data="menu:news"),
         ],
         [
             InlineKeyboardButton(MENU_BTN_START, callback_data="menu:start"),
+            InlineKeyboardButton(MENU_BTN_CITY, callback_data="menu:city"),
+        ],
+        [
             InlineKeyboardButton(MENU_BTN_MENU, callback_data="menu:menu"),
+        ],
+        [
+            InlineKeyboardButton(MENU_BTN_HELP, callback_data="menu:help"),
         ],
     ]
     return InlineKeyboardMarkup(buttons)
 
 
 def build_reply_menu_keyboard() -> ReplyKeyboardMarkup:
-    """Постоянная клавиатура внизу экрана (блок меню под полем ввода)."""
+    """Постоянная клавиатура внизу экрана: Погода/Новости, Старт/Выбор города, Меню, Справка."""
     keyboard = [
-        [KeyboardButton(MENU_BTN_HELP), KeyboardButton(MENU_BTN_CITY)],
         [KeyboardButton(MENU_BTN_WEATHER), KeyboardButton(MENU_BTN_NEWS)],
-        [KeyboardButton(MENU_BTN_START), KeyboardButton(MENU_BTN_MENU)],
+        [KeyboardButton(MENU_BTN_START), KeyboardButton(MENU_BTN_CITY)],
+        [KeyboardButton(MENU_BTN_MENU)],
+        [KeyboardButton(MENU_BTN_HELP)],
     ]
     return ReplyKeyboardMarkup(
         keyboard,

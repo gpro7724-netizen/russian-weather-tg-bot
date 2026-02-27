@@ -38,6 +38,17 @@
     });
   }
 
+  /** Поиск городов по названию (name_ru или slug). */
+  function findCitiesByQuery(q) {
+    if (!q || !cities.length) return [];
+    var norm = q.trim().toLowerCase();
+    if (norm.length < 1) return [];
+    return cities.filter(function (c) {
+      return (c.name_ru && c.name_ru.toLowerCase().indexOf(norm) !== -1) ||
+        (c.slug && c.slug.toLowerCase().indexOf(norm.replace(/\s+/g, "_")) !== -1);
+    });
+  }
+
   function fetchWeather(lat, lon, timezone) {
     var params = new URLSearchParams({
       latitude: lat,
@@ -199,6 +210,10 @@
       "<div class=\"landing\">" +
       "<h1 class=\"hero\">Погода по городам России</h1>" +
       "<p class=\"desc\">Актуальная погода, прогноз и расположение на карте. Выберите город на карте или в списке — карту можно двигать, приближать и отдалять.</p>" +
+      "<div class=\"search-wrap\">" +
+      "<input type=\"text\" id=\"landingSearch\" class=\"search-input\" placeholder=\"Поиск города...\" autocomplete=\"off\">" +
+      "<button type=\"button\" id=\"landingSearchBtn\" class=\"search-btn\" aria-label=\"Найти город\">\u{1F50D}</button>" +
+      "</div>" +
       "<div class=\"map-section\"><h2>Интерактивная карта</h2><div class=\"map-wrap\" id=\"homeMap\"></div></div>" +
       "<a href=\"#/cities\" class=\"btn-primary\">Выбрать город из списка</a>" +
       "</div>";
@@ -207,6 +222,26 @@
     setTimeout(function () {
       initHomeMap("homeMap");
     }, 50);
+    (function setupLandingSearch() {
+      var input = document.getElementById("landingSearch");
+      var btn = document.getElementById("landingSearchBtn");
+      function goToCity() {
+        var q = input && input.value ? input.value.trim() : "";
+        if (!q) return;
+        var found = findCitiesByQuery(q);
+        if (found.length > 0) {
+          window.location.hash = "#/city/" + encodeURIComponent(found[0].slug);
+        } else if (input) {
+          input.placeholder = "Город не найден";
+          input.value = "";
+          setTimeout(function () { input.placeholder = "Поиск города..."; }, 1500);
+        }
+      }
+      if (btn) btn.addEventListener("click", goToCity);
+      if (input) input.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") { e.preventDefault(); goToCity(); }
+      });
+    })();
   }
 
   function renderCities() {
@@ -215,24 +250,60 @@
       "<a href=\"#/\" class=\"back-link\">← Назад</a>" +
       "<h1>Города</h1>" +
       "</div>" +
+      "<div class=\"search-wrap\">" +
+      "<input type=\"text\" id=\"citiesSearch\" class=\"search-input\" placeholder=\"Поиск города...\" autocomplete=\"off\">" +
+      "<button type=\"button\" id=\"citiesSearchBtn\" class=\"search-btn\" aria-label=\"Найти город\">\u{1F50D}</button>" +
+      "</div>" +
       "<ul class=\"city-grid\" id=\"cityList\"></ul>";
     document.getElementById("content").innerHTML = html;
     var ul = document.getElementById("cityList");
-    cities.forEach(function (c) {
-      var li = document.createElement("li");
-      var a = document.createElement("a");
-      a.href = "#/city/" + encodeURIComponent(c.slug);
-      a.className = "city-card";
-      a.innerHTML = "<span class=\"name\">" + escapeHtml(c.name_ru) + "</span><span class=\"temp\" data-slug=\"" + escapeHtml(c.slug) + "\">—</span>";
-      li.appendChild(a);
-      ul.appendChild(li);
-    });
-    cities.forEach(function (c) {
-      fetchCurrentTemp(c.lat, c.lon).then(function (t) {
-        var el = document.querySelector(".temp[data-slug=\"" + c.slug + "\"]");
-        if (el) el.textContent = t != null ? (t > 0 ? "+" : "") + t + " °C" : "—";
+
+    function fillCityList(filterQuery) {
+      if (!ul) return;
+      var toShow = !filterQuery || filterQuery.length < 1 ? cities : findCitiesByQuery(filterQuery);
+      ul.innerHTML = "";
+      toShow.forEach(function (c) {
+        var li = document.createElement("li");
+        var a = document.createElement("a");
+        a.href = "#/city/" + encodeURIComponent(c.slug);
+        a.className = "city-card";
+        a.innerHTML = "<span class=\"name\">" + escapeHtml(c.name_ru) + "</span><span class=\"temp\" data-slug=\"" + escapeHtml(c.slug) + "\">—</span>";
+        li.appendChild(a);
+        ul.appendChild(li);
       });
-    });
+      toShow.forEach(function (c) {
+        fetchCurrentTemp(c.lat, c.lon).then(function (t) {
+          var el = document.querySelector(".temp[data-slug=\"" + c.slug + "\"]");
+          if (el) el.textContent = t != null ? (t > 0 ? "+" : "") + t + " °C" : "—";
+        });
+      });
+    }
+    fillCityList("");
+
+    (function setupCitiesSearch() {
+      var input = document.getElementById("citiesSearch");
+      var btn = document.getElementById("citiesSearchBtn");
+      if (btn) btn.addEventListener("click", function () {
+        var q = input && input.value ? input.value.trim() : "";
+        if (q) {
+          var found = findCitiesByQuery(q);
+          if (found.length > 0) window.location.hash = "#/city/" + encodeURIComponent(found[0].slug);
+        } else fillCityList("");
+      });
+      if (input) {
+        input.addEventListener("input", function () { fillCityList(input.value.trim()); });
+        input.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            var q = input.value.trim();
+            var found = findCitiesByQuery(q);
+            if (found.length === 1) window.location.hash = "#/city/" + encodeURIComponent(found[0].slug);
+            else if (found.length > 1) fillCityList(q);
+            else fillCityList("");
+          }
+        });
+      }
+    })();
   }
 
   function renderCity(slug) {

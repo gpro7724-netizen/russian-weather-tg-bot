@@ -64,6 +64,17 @@
     });
   }
 
+  /** Поиск городов по названию (name_ru или slug). Возвращает массив подходящих городов. */
+  function findCitiesByQuery(q) {
+    if (!q || !cities.length) return [];
+    var norm = q.trim().toLowerCase();
+    if (norm.length < 1) return [];
+    return cities.filter(function (c) {
+      return (c.name_ru && c.name_ru.toLowerCase().indexOf(norm) !== -1) ||
+        (c.slug && c.slug.toLowerCase().indexOf(norm.replace(/\s+/g, "_")) !== -1);
+    });
+  }
+
   function fetchWeather(lat, lon, timezone) {
     var params = new URLSearchParams({
       latitude: lat,
@@ -112,6 +123,26 @@
       "city_" + slug + "_6.png"
     ];
   }
+
+  /** Уникальный символ города для шапки и списков (посередине как указано пользователем). */
+  function getCitySymbol(slug) {
+    var symbols = {
+      moscow: "\u{1F3DB}", spb: "\u{26F2}", novosibirsk: "\u{1F3AD}", yekaterinburg: "\u{26EA}", kazan: "\u{1F54C}",
+      krasnoyarsk: "\u{26F0}", nizhny_novgorod: "\u{1F3D8}", chelyabinsk: "\u{1F3ED}", ufa: "\u{1F4CD}", krasnodar: "\u{1F3D6}",
+      samara: "\u{2693}", rostov_on_don: "\u{1F6A4}", omsk: "\u{1F3E2}", voronezh: "\u{1F30A}", perm: "\u{1F3F0}",
+      volgograd: "\u{1F4AA}", saratov: "\u{1F3A4}", tyumen: "\u{1F3D7}", tolyatti: "\u{1F697}", mahachkala: "\u{1F54C}",
+      barnaul: "\u{1F333}", izhevsk: "\u{2692}", khabarovsk: "\u{1F6E5}", ulyanovsk: "\u{1F4DA}", irkutsk: "\u{1F30A}",
+      vladivostok: "\u{1F6A4}", yaroslavl: "\u{1F3D8}", stavropol: "\u{1F3D6}", sevastopol: "\u{2693}", naberezhnye_chelny: "\u{1F54C}",
+      tomsk: "\u{1F332}", balashikha: "\u{1F3E0}", kemerovo: "\u{26CF}", orenburg: "\u{1F3D8}", novokuznetsk: "\u{26CF}",
+      ryazan: "\u{1F3D8}", donetsk: "\u{1F4CD}", luhansk: "\u{1F4CD}", tula: "\u{2694}", kirov: "\u{1F3D8}", kaliningrad: "\u{1F3F0}",
+      bryansk: "\u{1F3D8}", kursk: "\u{1F3D8}", magnitogorsk: "\u{2692}", sochi: "\u{1F3D6}", vladikavkaz: "\u{26F0}", grozny: "\u{1F3D8}",
+      tambov: "\u{1F3D8}", ivanovo: "\u{1F3ED}", tver: "\u{1F3D8}", simferopol: "\u{1F3D8}", kostroma: "\u{1F54C}",
+      volzhsky: "\u{1F30A}", taganrog: "\u{2693}", sterlitamak: "\u{1F3ED}", komsomolsk_na_amure: "\u{1F6A4}", petrozavodsk: "\u{1F3D6}",
+      lipetsk: "\u{2692}", arhangelsk: "\u{2693}", cheboksary: "\u{1F3D8}", kaluga: "\u{1F3D8}", smolensk: "\u{1F3D8}"
+    };
+    return symbols[slug] || "\u{1F3D8}";
+  }
+
   function openMapApp(citySlug) {
     var base = getBaseUrl();
     var mapBase = base.replace(/\/weather_app\/?$/, "/map_app/");
@@ -138,8 +169,10 @@
     }).catch(function () { return null; });
   }
 
-  function makeMarkerHtml(name, tempStr) {
+  function makeMarkerHtml(name, tempStr, symbol) {
+    var sym = symbol || "\u{1F3D8}";
     return "<div class=\"city-marker-wrap\">" +
+      "<div class=\"city-marker-symbol\">" + sym + "</div>" +
       "<div class=\"city-marker-temp\">" + escapeHtml(tempStr) + "</div>" +
       "<div class=\"city-marker-name\">" + escapeHtml(name) + "</div>" +
       "<div class=\"city-marker-dot\"></div>" +
@@ -179,13 +212,13 @@
       var tempStr = "—°";
       var icon = L.divIcon({
         className: "city-marker-div",
-        html: makeMarkerHtml(c.name_ru, tempStr),
+        html: makeMarkerHtml(c.name_ru, tempStr, getCitySymbol(c.slug)),
         iconSize: [140, 72],
         iconAnchor: [70, 70]
       });
       var m = L.marker([c.lat, c.lon], { icon: icon });
       var weatherUrl = "#/city/" + encodeURIComponent(c.slug);
-      var popupHtml = "<div class=\"popup-title\">" + escapeHtml(c.name_ru) + "</div>" +
+      var popupHtml = "<div class=\"popup-title\">" + getCitySymbol(c.slug) + " " + escapeHtml(c.name_ru) + "</div>" +
         "<div class=\"popup-temp\">— °C</div>" +
         "<div class=\"popup-actions\"><a href=\"" + weatherUrl + "\">Погода</a></div>";
       m.bindPopup(popupHtml);
@@ -194,12 +227,12 @@
         var str = (t != null ? (t > 0 ? "+" : "") + t + "°" : "—°");
         m.setIcon(L.divIcon({
           className: "city-marker-div",
-          html: makeMarkerHtml(c.name_ru, str),
+          html: makeMarkerHtml(c.name_ru, str, getCitySymbol(c.slug)),
           iconSize: [140, 72],
           iconAnchor: [70, 70]
         }));
         var newTempText = (t != null ? (t > 0 ? "+" : "") + t + " °C" : "—");
-        m.setPopupContent("<div class=\"popup-title\">" + escapeHtml(c.name_ru) + "</div>" +
+        m.setPopupContent("<div class=\"popup-title\">" + getCitySymbol(c.slug) + " " + escapeHtml(c.name_ru) + "</div>" +
           "<div class=\"popup-temp\">" + newTempText + "</div>" +
           "<div class=\"popup-actions\"><a href=\"" + weatherUrl + "\">Погода</a></div>");
       });
@@ -242,6 +275,10 @@
       "<span>Погода России</span></a>" +
       "<div class=\"hero\">Погода по городам России</div>" +
       "<p class=\"desc\">Мы бот, который упрощает поиск погоды. Выберите город на карте или в списке — на карте видна температура, карту можно двигать и масштабировать.</p>" +
+      "<div class=\"search-wrap\">" +
+      "<input type=\"text\" id=\"landingSearch\" class=\"search-input\" placeholder=\"Поиск города...\" autocomplete=\"off\">" +
+      "<button type=\"button\" id=\"landingSearchBtn\" class=\"search-btn\" aria-label=\"Найти город\">\u{1F50D}</button>" +
+      "</div>" +
       "<div class=\"map-section\"><h3>Карта России</h3><div class=\"map-wrap map-landing\" id=\"landingMap\"></div></div>" +
       "<a href=\"#/cities\" class=\"btn-city\">Выбрать город</a>";
     fragment.appendChild(landing);
@@ -251,6 +288,28 @@
     setTimeout(function () {
       initLandingMap();
     }, 50);
+    (function setupLandingSearch() {
+      var input = document.getElementById("landingSearch");
+      var btn = document.getElementById("landingSearchBtn");
+      function goToCity() {
+        var q = input && input.value ? input.value.trim() : "";
+        if (!q) return;
+        var found = findCitiesByQuery(q);
+        if (found.length > 0) {
+          window.location.hash = "#/city/" + encodeURIComponent(found[0].slug);
+        } else if (input) {
+          input.placeholder = "Город не найден";
+          input.value = "";
+          setTimeout(function () { input.placeholder = "Поиск города..."; }, 1500);
+        }
+      }
+      if (btn) btn.addEventListener("click", goToCity);
+      if (input) {
+        input.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") { e.preventDefault(); goToCity(); }
+        });
+      }
+    })();
   }
 
   function renderCities() {
@@ -261,31 +320,80 @@
     header.className = "header";
     header.innerHTML = "<a href=\"#/\" class=\"back-link visible\">← Назад</a><h1>Выбор города</h1>";
     fragment.appendChild(header);
+    var searchWrap = document.createElement("div");
+    searchWrap.className = "search-wrap";
+    searchWrap.innerHTML =
+      "<input type=\"text\" id=\"citiesSearch\" class=\"search-input\" placeholder=\"Поиск города...\" autocomplete=\"off\">" +
+      "<button type=\"button\" id=\"citiesSearchBtn\" class=\"search-btn\" aria-label=\"Найти город\">\u{1F50D}</button>";
+    fragment.appendChild(searchWrap);
     var ul = document.createElement("ul");
     ul.className = "city-list";
-    cities.forEach(function (c) {
-      var li = document.createElement("li");
-      var a = document.createElement("a");
-      a.href = "#/city/" + encodeURIComponent(c.slug);
-      a.innerHTML = "<span class=\"city-emoji\" data-slug=\"" + escapeHtml(c.slug) + "\">\u{2601}</span><span>" + escapeHtml(c.name_ru) + "</span><div class=\"temp\" data-slug=\"" + escapeHtml(c.slug) + "\">—</div>";
-      li.appendChild(a);
-      ul.appendChild(li);
-    });
+    ul.id = "cityListUl";
     fragment.appendChild(ul);
     var app = document.getElementById("app");
     app.innerHTML = "";
     app.appendChild(fragment);
-    cities.forEach(function (c) {
-      fetch(OPEN_METEO + "?" + new URLSearchParams({ latitude: c.lat, longitude: c.lon, current: "temperature_2m,weather_code" }).toString()).then(function (r) { return r.json(); }).then(function (data) {
-        var cur = data.current;
-        var t = cur && cur.temperature_2m;
-        var code = cur && cur.weather_code;
-        var tempEl = app.querySelector(".temp[data-slug=\"" + c.slug + "\"]");
-        var emojiEl = app.querySelector(".city-emoji[data-slug=\"" + c.slug + "\"]");
-        if (tempEl && t != null) tempEl.textContent = (t > 0 ? "+" : "") + Math.round(t) + "°C";
-        if (emojiEl && code != null) emojiEl.textContent = weatherCodeToEmoji(code);
-      }).catch(function () {});
-    });
+
+    function fillCityList(filterQuery) {
+      var listEl = document.getElementById("cityListUl");
+      if (!listEl) return;
+      var toShow = !filterQuery || filterQuery.length < 1
+        ? cities
+        : findCitiesByQuery(filterQuery);
+      listEl.innerHTML = "";
+      toShow.forEach(function (c) {
+        var li = document.createElement("li");
+        var a = document.createElement("a");
+        a.href = "#/city/" + encodeURIComponent(c.slug);
+        a.innerHTML = "<span class=\"city-emoji\" data-slug=\"" + escapeHtml(c.slug) + "\">" + getCitySymbol(c.slug) + "</span><span>" + escapeHtml(c.name_ru) + "</span><div class=\"temp\" data-slug=\"" + escapeHtml(c.slug) + "\">—</div>";
+        li.appendChild(a);
+        listEl.appendChild(li);
+      });
+      toShow.forEach(function (c) {
+        fetch(OPEN_METEO + "?" + new URLSearchParams({ latitude: c.lat, longitude: c.lon, current: "temperature_2m,weather_code" }).toString()).then(function (r) { return r.json(); }).then(function (data) {
+          var cur = data.current;
+          var t = cur && cur.temperature_2m;
+          var code = cur && cur.weather_code;
+          var tempEl = app.querySelector(".temp[data-slug=\"" + c.slug + "\"]");
+          if (tempEl && t != null) tempEl.textContent = (t > 0 ? "+" : "") + Math.round(t) + "°C";
+        }).catch(function () {});
+      });
+    }
+
+    fillCityList("");
+
+    (function setupCitiesSearch() {
+      var input = document.getElementById("citiesSearch");
+      var btn = document.getElementById("citiesSearchBtn");
+      function applySearch() {
+        var q = input && input.value ? input.value.trim() : "";
+        fillCityList(q);
+        if (q) {
+          var found = findCitiesByQuery(q);
+          if (found.length === 1) window.location.hash = "#/city/" + encodeURIComponent(found[0].slug);
+        }
+      }
+      if (btn) btn.addEventListener("click", function () {
+        var q = input && input.value ? input.value.trim() : "";
+        if (q) {
+          var found = findCitiesByQuery(q);
+          if (found.length > 0) window.location.hash = "#/city/" + encodeURIComponent(found[0].slug);
+        } else fillCityList("");
+      });
+      if (input) {
+        input.addEventListener("input", function () { fillCityList(input.value.trim()); });
+        input.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            var q = input.value.trim();
+            var found = findCitiesByQuery(q);
+            if (found.length === 1) window.location.hash = "#/city/" + encodeURIComponent(found[0].slug);
+            else if (found.length > 1) fillCityList(q);
+            else fillCityList("");
+          }
+        });
+      }
+    })();
   }
 
   function setCityImageWithFallback(imgEl, slug) {
@@ -320,8 +428,10 @@
     }
     var fragment = document.createDocumentFragment();
     var header = document.createElement("div");
-    header.className = "header";
-    header.innerHTML = "<a href=\"#/cities\" class=\"back-link visible\">← Назад</a><h1>" + escapeHtml(city.name_ru) + "</h1>";
+    header.className = "header header-city";
+    header.innerHTML = "<a href=\"#/cities\" class=\"back-link visible\">← Назад</a>" +
+      "<span class=\"header-city-symbol\" aria-hidden=\"true\">" + getCitySymbol(slug) + "</span>" +
+      "<h1>" + escapeHtml(city.name_ru) + "</h1>";
     fragment.appendChild(header);
 
     var historicImg = document.createElement("img");
