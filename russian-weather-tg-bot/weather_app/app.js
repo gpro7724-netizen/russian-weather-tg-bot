@@ -21,6 +21,34 @@
 
   let cities = [];
   let cityEmblems = {};
+  var LANDING_BG_IMAGES = [
+    "historic_moscow.png",
+    "historic_spb.png",
+    "historic_novosibirsk.png",
+    "historic_yekaterinburg.png",
+    "historic_kazan.png",
+    "historic_nizhny_novgorod.png",
+    "historic_chelyabinsk.png",
+    "historic_ufa.png",
+    "historic_krasnodar.png",
+    "historic_samara.png",
+    "historic_rostov_on_don.png",
+    "historic_omsk.png",
+    "historic_sochi.png",
+    "historic_voronezh.png",
+    "historic_volgograd.png",
+    "historic_perm.png",
+    "historic_irkutsk.png",
+    "historic_vladivostok.png",
+    "historic_yaroslavl.png",
+    "historic_tula.png"
+  ];
+
+  var landingBgRoot = null;
+  var landingBgSlides = [];
+  var landingBgTimer = null;
+  var landingBgImageIdx = 0;
+  var landingBgVisibleSlide = 0;
 
   function lonLatToPercent(lon, lat) {
     var lonMin = MAP_EXTENT.lonMin, latMin = MAP_EXTENT.latMin, lonMax = MAP_EXTENT.lonMax, latMax = MAP_EXTENT.latMax;
@@ -60,6 +88,63 @@
 
   function getAssetsBase() {
     return getBaseUrl() + "assets/";
+  }
+
+  function ensureLandingBackground() {
+    if (!LANDING_BG_IMAGES || !LANDING_BG_IMAGES.length) return;
+    if (!landingBgRoot) {
+      landingBgRoot = document.createElement("div");
+      landingBgRoot.id = "landingBgCarousel";
+      landingBgRoot.className = "landing-bg-carousel";
+      var s1 = document.createElement("div");
+      var s2 = document.createElement("div");
+      s1.className = "landing-bg-slide";
+      s2.className = "landing-bg-slide";
+      var gradient = document.createElement("div");
+      gradient.className = "landing-bg-gradient";
+      landingBgRoot.appendChild(s1);
+      landingBgRoot.appendChild(s2);
+      landingBgRoot.appendChild(gradient);
+      document.body.appendChild(landingBgRoot);
+      landingBgSlides = [s1, s2];
+    }
+    if (landingBgRoot) {
+      landingBgRoot.style.display = "block";
+    }
+    startLandingBackground();
+  }
+
+  function startLandingBackground() {
+    if (!landingBgSlides.length || !LANDING_BG_IMAGES.length) return;
+    var base = getAssetsBase();
+    if (landingBgTimer) {
+      clearInterval(landingBgTimer);
+      landingBgTimer = null;
+    }
+    landingBgImageIdx = 0;
+    landingBgVisibleSlide = 0;
+    landingBgSlides[0].style.backgroundImage = "url(" + base + LANDING_BG_IMAGES[0] + ")";
+    landingBgSlides[0].classList.add("active");
+    landingBgSlides[1].classList.remove("active");
+    landingBgTimer = window.setInterval(function () {
+      landingBgImageIdx = (landingBgImageIdx + 1) % LANDING_BG_IMAGES.length;
+      var nextSlideIndex = landingBgVisibleSlide ^ 1;
+      var nextSlide = landingBgSlides[nextSlideIndex];
+      nextSlide.style.backgroundImage = "url(" + base + LANDING_BG_IMAGES[landingBgImageIdx] + ")";
+      nextSlide.classList.add("active");
+      landingBgSlides[landingBgVisibleSlide].classList.remove("active");
+      landingBgVisibleSlide = nextSlideIndex;
+    }, 9000);
+  }
+
+  function hideLandingBackground() {
+    if (landingBgTimer) {
+      clearInterval(landingBgTimer);
+      landingBgTimer = null;
+    }
+    if (landingBgRoot) {
+      landingBgRoot.style.display = "none";
+    }
   }
 
   function loadCities() {
@@ -173,14 +258,14 @@
   }
 
   function fetchWeather(lat, lon, timezone) {
-    // Используем WeatherAPI.com: forecast.json (текущая погода + прогноз).
+    // Используем WeatherAPI.com: forecast.json (текущая погода + прогноз до 7 дней).
     if (!WEATHER_API_KEY) {
       return Promise.reject(new Error("Не задан ключ WEATHER_API_KEY для WeatherAPI.com"));
     }
     var params = new URLSearchParams({
       key: WEATHER_API_KEY,
       q: lat + "," + lon,
-      days: "3",
+      days: "7",
       lang: "ru",
       aqi: "no",
       alerts: "no"
@@ -269,6 +354,40 @@
       var cur = d && d.current;
       return cur && cur.temp_c != null ? Math.round(cur.temp_c) : null;
     }).catch(function () { return null; });
+  }
+
+  function buildDayPartsHtml(forecastDay) {
+    var hours = forecastDay && forecastDay.hour;
+    if (!hours || !hours.length) return "";
+    function slot(hourRep, label) {
+      var best = null;
+      var bestDelta = 25;
+      for (var i = 0; i < hours.length; i++) {
+        var h = hours[i];
+        var tStr = h && h.time;
+        if (!tStr || tStr.length < 13) continue;
+        var hh = parseInt(tStr.substr(11, 2), 10);
+        if (isNaN(hh)) continue;
+        var delta = Math.abs(hh - hourRep);
+        if (delta < bestDelta) {
+          bestDelta = delta;
+          best = h;
+        }
+      }
+      if (!best) {
+        return "<div class=\"day-part-row\"><span class=\"label\">" + escapeHtml(label) + "</span><span class=\"value\">—</span></div>";
+      }
+      var t = best.temp_c;
+      var condText = best.condition && best.condition.text ? best.condition.text : "";
+      var tempStr = t != null ? (t > 0 ? "+" : "") + Math.round(t) + "°C" : "—";
+      return "<div class=\"day-part-row\"><span class=\"label\">" + escapeHtml(label) + "</span><span class=\"value\">" + tempStr + ", " + escapeHtml(condText) + "</span></div>";
+    }
+    return "<div class=\"day-parts-list\">" +
+      slot(3, "Ночь") +
+      slot(9, "Утро") +
+      slot(15, "День") +
+      slot(21, "Вечер") +
+      "</div>";
   }
 
   function makeMarkerHtml(name, tempStr, symbol) {
@@ -394,6 +513,7 @@
   function renderHome() {
     destroyLandingMap();
     destroyCityMap();
+    ensureLandingBackground();
     var fragment = document.createDocumentFragment();
     var landing = document.createElement("div");
     landing.className = "landing";
@@ -449,6 +569,7 @@
   function renderCities() {
     destroyLandingMap();
     destroyCityMap();
+    hideLandingBackground();
     var fragment = document.createDocumentFragment();
     var header = document.createElement("div");
     header.className = "header";
@@ -592,6 +713,7 @@
   function renderCity(slug) {
     destroyLandingMap();
     destroyCityMap();
+    hideLandingBackground();
     var city = cities.find(function (c) { return c.slug === slug; });
     if (!city) {
       document.getElementById("app").innerHTML = "<p class=\"error-msg\">Город не найден.</p>";
@@ -629,9 +751,13 @@
     currentBlock.textContent = "Загрузка погоды...";
     fragment.appendChild(currentBlock);
 
+    var todayPartsBlock = document.createElement("div");
+    todayPartsBlock.className = "today-parts";
+    fragment.appendChild(todayPartsBlock);
+
     var dayBlock = document.createElement("div");
     dayBlock.className = "day-forecast";
-    dayBlock.innerHTML = "<strong>Прогноз на 2 дня</strong>";
+    dayBlock.innerHTML = "<strong>Прогноз на 7 дней</strong>";
     fragment.appendChild(dayBlock);
 
     var mapSection = document.createElement("div");
@@ -674,11 +800,18 @@
         var forecast = data && data.forecast;
         var days = forecast && forecast.forecastday;
         if (days && days.length) {
-          var html = "<strong>Прогноз на 2 дня</strong>";
-          for (var i = 0; i < Math.min(days.length, 3); i++) {
+          // Сегодня по времени суток (утро / день / вечер / ночь)
+          var todayHtml = "<strong>Сегодня по времени суток</strong>";
+          todayHtml += buildDayPartsHtml(days[0]);
+          todayPartsBlock.innerHTML = todayHtml;
+
+          // Прогноз на 7 дней с выбором дня
+          var html = "<strong>Прогноз на 7 дней</strong>";
+          html += "<div class=\"week-calendar\">";
+          var maxDays = Math.min(days.length, 7);
+          for (var i = 0; i < maxDays; i++) {
             var day = days[i];
             var dateStr = day && day.date;
-            var dayInfo = day && day.day;
             var d = dateStr ? new Date(dateStr) : null;
             var dayLabel;
             if (i === 0) {
@@ -690,15 +823,29 @@
             } else {
               dayLabel = "День " + (i + 1);
             }
-            var maxT = dayInfo && dayInfo.maxtemp_c;
-            var minT = dayInfo && dayInfo.mintemp_c;
-            var condText = dayInfo && dayInfo.condition && dayInfo.condition.text;
-            var tempStr = (maxT != null && minT != null)
-              ? (maxT > 0 ? "+" : "") + Math.round(maxT) + "° / " + (minT > 0 ? "+" : "") + Math.round(minT) + "°"
-              : "—";
-            html += "<div class=\"day-forecast\"><span class=\"slot\">" + escapeHtml(dayLabel) + "</span><span class=\"temp\">" + tempStr + "</span><span>" + escapeHtml(condText || "") + "</span></div>";
+            html += "<button type=\"button\" class=\"week-day-btn\" data-day-index=\"" + i + "\">" + escapeHtml(dayLabel) + "</button>";
           }
+          html += "</div><div class=\"week-day-details\"></div>";
           dayBlock.innerHTML = html;
+
+          var buttons = dayBlock.querySelectorAll(".week-day-btn");
+          var detailsEl = dayBlock.querySelector(".week-day-details");
+          function activate(idx) {
+            if (!detailsEl || !days[idx]) return;
+            buttons.forEach(function (btn, j) {
+              btn.classList.toggle("active", j === idx);
+            });
+            detailsEl.innerHTML = buildDayPartsHtml(days[idx]);
+          }
+          buttons.forEach(function (btn, idx) {
+            btn.addEventListener("click", function () { activate(idx); });
+          });
+          if (buttons.length) {
+            activate(0);
+          }
+        } else {
+          todayPartsBlock.innerHTML = "";
+          dayBlock.innerHTML = "";
         }
       }).catch(function () {
         currentBlock.className = "current-weather error-msg";

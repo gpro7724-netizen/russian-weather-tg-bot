@@ -11,8 +11,8 @@
     // ВАЖНО: при прямом размещении ключа в этом файле он будет виден в браузере.
     window.WEATHER_API_KEY = "da74e01a074f45be83a190851262702";
     // Ключ OpenWeatherMap для погодных слоёв (осадки / ветер / температура) на карте.
-    // Зарегистрируйтесь на https://openweathermap.org/, создайте API‑ключ и вставьте сюда.
-    // Без этого ключа режимы «Осадки» и «Ветер» будут недоступны, карта покажет только подложку.
+    // Значение подставляется через GitHub Actions из секрета OPENWEATHER_TILE_KEY.
+    // Локально можно задать window.OPENWEATHER_TILE_KEY заранее, если нужно.
     window.OPENWEATHER_TILE_KEY = window.OPENWEATHER_TILE_KEY || "";
   </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
@@ -261,6 +261,36 @@
       font-size: 0.9rem;
       color: #bbb;
     }
+    .today-parts {
+      background: rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 14px 16px;
+      margin: 10px 0 14px;
+      font-size: 0.9rem;
+    }
+    .today-parts strong {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #e5e7eb;
+    }
+    .day-parts-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .day-part-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .day-part-row .label {
+      color: #9ca3af;
+    }
+    .day-part-row .value {
+      color: #e5e7eb;
+      text-align: right;
+    }
     .current-weather .retry-btn {
       margin-top: 14px;
       padding: 8px 16px;
@@ -280,13 +310,33 @@
       border-radius: 12px;
       padding: 14px;
       margin-bottom: 10px;
-      display: grid;
-      grid-template-columns: 1fr auto auto;
-      align-items: center;
-      gap: 10px;
     }
-    .day-forecast .slot { font-weight: 500; }
-    .day-forecast .temp { color: var(--accent, #87ceeb); }
+    .week-calendar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+      margin-bottom: 8px;
+    }
+    .week-day-btn {
+      flex: 0 0 auto;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: transparent;
+      color: var(--text, #eee);
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    .week-day-btn.active {
+      background: #0ea5e9;
+      border-color: #0ea5e9;
+      color: #fff;
+    }
+    .week-day-details {
+      font-size: 0.85rem;
+      margin-top: 4px;
+    }
     .map-section { margin-top: 20px; }
     .map-section h3 { font-size: 0.95rem; color: #aaa; margin-bottom: 8px; }
     .map-modes {
@@ -383,6 +433,35 @@
     .loading { text-align: center; padding: 24px; color: #888; }
     .error-msg { color: #e74c3c; padding: 12px; }
     #app { min-height: 60vh; }
+    /* Фон из красивых фотографий городов на главной странице */
+    .landing-bg-carousel {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .landing-bg-slide {
+      position: absolute;
+      inset: -4%;
+      background-size: cover;
+      background-position: center center;
+      filter: blur(10px) saturate(1.15) brightness(0.9);
+      transform: scale(1.06);
+      opacity: 0;
+      transition: opacity 1.6s ease-in-out;
+    }
+    .landing-bg-slide.active {
+      opacity: 1;
+    }
+    .landing-bg-gradient {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at top, rgba(255,255,255,0.92) 0, rgba(255,255,255,0.65) 30%, transparent 55%),
+        linear-gradient(to bottom, rgba(26,26,46,0.5), rgba(26,26,46,0.96));
+      mix-blend-mode: normal;
+    }
     @supports (padding: max(0px)) {
       body { padding-top: max(12px, env(safe-area-inset-top)); padding-bottom: max(24px, env(safe-area-inset-bottom)); }
     }

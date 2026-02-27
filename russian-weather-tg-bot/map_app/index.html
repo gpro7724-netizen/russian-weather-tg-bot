@@ -10,8 +10,8 @@
   <script>
     window.TELEGRAM_BOT_URL = "https://t.me/Russianweather1_bot";
     // Ключ OpenWeatherMap для погодных слоёв (осадки / ветер / температура) на карте.
-    // Зарегистрируйтесь на https://openweathermap.org/, создайте API‑ключ и вставьте сюда.
-    // Без этого ключа режимы «Осадки» и «Ветер» будут недоступны, карта покажет только подложку.
+    // Значение подставляется через GitHub Actions из секрета OPENWEATHER_TILE_KEY.
+    // Локально можно задать window.OPENWEATHER_TILE_KEY заранее, если нужно.
     window.OPENWEATHER_TILE_KEY = window.OPENWEATHER_TILE_KEY || "";
   </script>
   <style>

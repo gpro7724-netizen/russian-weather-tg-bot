@@ -69,7 +69,8 @@
       timezone: timezone,
       current: "temperature_2m,weather_code,surface_pressure,wind_speed_10m,relative_humidity_2m,apparent_temperature",
       daily: "temperature_2m_max,temperature_2m_min,weather_code,time",
-      forecast_days: 3
+      hourly: "temperature_2m,weather_code",
+      forecast_days: 7
     });
     return fetch(OPEN_METEO + "?" + params.toString()).then(function (r) {
       if (!r.ok) throw new Error("Не удалось загрузить погоду");
@@ -96,6 +97,41 @@
     var div = document.createElement("div");
     div.textContent = s;
     return div.innerHTML;
+  }
+
+  function buildDayPartsHtmlForDate(dateStr, hourlyTimes, hourlyTemps, hourlyCodes) {
+    if (!dateStr || !hourlyTimes || !hourlyTemps || !hourlyTimes.length) return "";
+    function slot(hourRep, label) {
+      var bestIndex = -1;
+      var bestDelta = 25;
+      var datePrefix = dateStr.slice(0, 10);
+      for (var i = 0; i < hourlyTimes.length; i++) {
+        var tStr = hourlyTimes[i];
+        if (!tStr || tStr.slice(0, 10) !== datePrefix) continue;
+        if (tStr.length < 13) continue;
+        var hh = parseInt(tStr.substr(11, 2), 10);
+        if (isNaN(hh)) continue;
+        var delta = Math.abs(hh - hourRep);
+        if (delta < bestDelta) {
+          bestDelta = delta;
+          bestIndex = i;
+        }
+      }
+      if (bestIndex === -1) {
+        return "<div class=\"day-part-row\"><span class=\"label\">" + escapeHtml(label) + "</span><span class=\"value\">—</span></div>";
+      }
+      var t = hourlyTemps[bestIndex];
+      var code = hourlyCodes && hourlyCodes[bestIndex];
+      var tempStr = t != null ? (t > 0 ? "+" : "") + Math.round(t) + "°C" : "—";
+      var desc = weatherCodeToDesc(code || 0);
+      return "<div class=\"day-part-row\"><span class=\"label\">" + escapeHtml(label) + "</span><span class=\"value\">" + tempStr + ", " + escapeHtml(desc) + "</span></div>";
+    }
+    return "<div class=\"day-parts-list\">" +
+      slot(3, "Ночь") +
+      slot(9, "Утро") +
+      slot(15, "День") +
+      slot(21, "Вечер") +
+      "</div>";
   }
 
   function getCitySymbol(slug) {
@@ -372,19 +408,57 @@
         "Давление: " + (cur.surface_pressure != null ? Math.round(cur.surface_pressure * 0.750062) + " мм рт. ст." : "—") +
         "</div>";
 
-      var daily = data.daily;
-      if (daily && daily.time && daily.time.length) {
-        var times = daily.time, maxT = daily.temperature_2m_max || [], minT = daily.temperature_2m_min || [], codes = daily.weather_code || [];
-        var forecastHtml = "<h3 style=\"margin-bottom:12px;font-size:1rem;\">Прогноз</h3><div class=\"forecast-list\">";
-        for (var i = 0; i < times.length; i++) {
+      var daily = data.daily || {};
+      var hourly = data.hourly || {};
+      var times = daily.time || [];
+      var maxT = daily.temperature_2m_max || [];
+      var minT = daily.temperature_2m_min || [];
+      var codes = daily.weather_code || [];
+      var hourlyTimes = hourly.time || [];
+      var hourlyTemps = hourly.temperature_2m || [];
+      var hourlyCodes = hourly.weather_code || [];
+
+      if (times.length) {
+        // Сегодня: утро / день / вечер / ночь
+        var todayHtml = "<div class=\"today-parts\"><div class=\"today-title\">Сегодня по времени суток</div>";
+        todayHtml += buildDayPartsHtmlForDate(times[0], hourlyTimes, hourlyTemps, hourlyCodes);
+        todayHtml += "</div>";
+        card.innerHTML += todayHtml;
+
+        // Прогноз на 7 дней с выбором дня
+        var forecastHtml = "<h3 class=\"week-forecast-title\">Прогноз на 7 дней</h3><div class=\"week-calendar\">";
+        var maxDays = Math.min(times.length, 7);
+        for (var i = 0; i < maxDays; i++) {
           var d = new Date(times[i]);
           var dayLabel = i === 0 ? "Сегодня" : (i === 1 ? "Завтра" : (d.getDate() + "." + (d.getMonth() + 1)));
-          var maxVal = maxT[i], minVal = minT[i];
-          var tempStr2 = (maxVal != null && minVal != null) ? (maxVal > 0 ? "+" : "") + Math.round(maxVal) + "° / " + (minVal > 0 ? "+" : "") + Math.round(minVal) + "°" : "—";
-          forecastHtml += "<div class=\"forecast-item\"><span class=\"day\">" + escapeHtml(dayLabel) + "</span><span class=\"temp\">" + tempStr2 + "</span><span>" + escapeHtml(weatherCodeToDesc(codes[i] || 0)) + "</span></div>";
+          forecastHtml += "<button type=\"button\" class=\"week-day-btn\" data-day-index=\"" + i + "\">" + escapeHtml(dayLabel) + "</button>";
         }
-        forecastHtml += "</div>";
+        forecastHtml += "</div><div class=\"week-day-details\"></div>";
         card.innerHTML += forecastHtml;
+
+        var buttons = card.querySelectorAll(".week-day-btn");
+        var detailsEl = card.querySelector(".week-day-details");
+        function activateDay(idx) {
+          if (!detailsEl || idx < 0 || idx >= maxDays) return;
+          buttons.forEach(function (btn, j) {
+            btn.classList.toggle("active", j === idx);
+          });
+          var maxVal = maxT[idx];
+          var minVal = minT[idx];
+          var code = codes[idx] || 0;
+          var tempStr2 = (maxVal != null && minVal != null)
+            ? (maxVal > 0 ? "+" : "") + Math.round(maxVal) + "° / " + (minVal > 0 ? "+" : "") + Math.round(minVal) + "°"
+            : "—";
+          var summary = "<div class=\"week-day-summary\">Макс/мин: " + tempStr2 + " · " + escapeHtml(weatherCodeToDesc(code)) + "</div>";
+          summary += buildDayPartsHtmlForDate(times[idx], hourlyTimes, hourlyTemps, hourlyCodes);
+          detailsEl.innerHTML = summary;
+        }
+        buttons.forEach(function (btn, idx) {
+          btn.addEventListener("click", function () { activateDay(idx); });
+        });
+        if (buttons.length) {
+          activateDay(0);
+        }
       }
     }).catch(function () {
       var card = document.getElementById("weatherCard");

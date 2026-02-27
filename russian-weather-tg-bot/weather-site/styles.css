@@ -497,6 +497,40 @@ body {
   color: var(--text-muted);
 }
 
+.today-parts {
+  margin-top: 18px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(148, 163, 184, 0.35);
+}
+
+.today-parts .today-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 6px;
+}
+
+.day-parts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.9rem;
+}
+
+.day-part-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.day-part-row .label {
+  color: var(--text-muted);
+}
+
+.day-part-row .value {
+  text-align: right;
+}
+
 .forecast-list {
   display: flex;
   flex-direction: column;
@@ -520,6 +554,49 @@ body {
 .forecast-item .temp {
   font-family: var(--font-mono);
   color: var(--accent);
+}
+
+.week-forecast-title {
+  margin-top: 18px;
+  margin-bottom: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.week-calendar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.week-day-btn {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--text);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.week-day-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--bg);
+}
+
+.week-day-details {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 0.9rem;
+}
+
+.week-day-summary {
+  color: var(--text-muted);
 }
 
 .photo-block {
