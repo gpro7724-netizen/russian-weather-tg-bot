@@ -1,0 +1,18 @@
+{
+  "subscriptions": [
+    {
+      "user_id": 7749317565,
+      "chat_id": 7749317565,
+      "city_slug": "chelyabinsk",
+      "time": "06:00",
+      "tz": "Asia/Yekaterinburg"
+    },
+    {
+      "user_id": 6428159217,
+      "chat_id": 6428159217,
+      "city_slug": "chelyabinsk",
+      "time": "13:03",
+      "tz": "Asia/Yekaterinburg"
+    }
+  ]
+}

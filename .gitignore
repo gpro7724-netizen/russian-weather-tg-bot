@@ -1,0 +1,29 @@
+# Секреты и окружение
+.env
+.env.*
+!.env.example
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# Node (если есть)
+node_modules/
+
+# Системные
+.DS_Store
+Thumbs.db
+*.log
+
+# Игнор из подпапки бота (опционально — раскомментируйте, если не хотите пушить тяжёлые ассеты)
+# russian-weather-tg-bot/assets/*.png
+# !russian-weather-tg-bot/assets/.gitkeep

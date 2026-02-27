@@ -1,0 +1,31 @@
+# Города-миллионники РФ: slug -> (name_ru, name_en) для скриптов загрузки картинок.
+# Синхронизировано с russian-weather-tg-bot.
+
+CITIES = {
+    "moscow": ("Москва", "Moscow"),
+    "spb": ("Санкт-Петербург", "Saint Petersburg"),
+    "novosibirsk": ("Новосибирск", "Novosibirsk"),
+    "yekaterinburg": ("Екатеринбург", "Yekaterinburg"),
+    "nizhny_novgorod": ("Нижний Новгород", "Nizhny Novgorod"),
+    "kazan": ("Казань", "Kazan"),
+    "chelyabinsk": ("Челябинск", "Chelyabinsk"),
+    "omsk": ("Омск", "Omsk"),
+    "samara": ("Самара", "Samara"),
+    "rostov_on_don": ("Ростов-на-Дону", "Rostov-on-Don"),
+    "ufa": ("Уфа", "Ufa"),
+    "krasnoyarsk": ("Красноярск", "Krasnoyarsk"),
+    "perm": ("Пермь", "Perm"),
+    "voronezh": ("Воронеж", "Voronezh"),
+    "volgograd": ("Волгоград", "Volgograd"),
+    "krasnodar": ("Краснодар", "Krasnodar"),
+    "saratov": ("Саратов", "Saratov"),
+    "tyumen": ("Тюмень", "Tyumen"),
+    "tolyatti": ("Тольятти", "Tolyatti"),
+    "izhevsk": ("Ижевск", "Izhevsk"),
+    "barnaul": ("Барнаул", "Barnaul"),
+    "ulyanovsk": ("Ульяновск", "Ulyanovsk"),
+    "irkutsk": ("Иркутск", "Irkutsk"),
+    "khabarovsk": ("Хабаровск", "Khabarovsk"),
+    "vladivostok": ("Владивосток", "Vladivostok"),
+    "mahachkala": ("Махачкала", "Makhachkala"),
+}

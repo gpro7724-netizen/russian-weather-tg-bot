@@ -1,0 +1,36 @@
+# Публикует папку weather_app на GitHub Pages (мини-приложение «Сайт погоды» в боте).
+# После push в main/master: Settings → Pages → Source: Deploy from branch → branch: gh-pages → Save.
+# Сайт будет доступен: https://<USER>.github.io/<REPO>/
+name: Deploy Weather App to GitHub Pages
+
+on:
+  push:
+    branches: [main, master]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact (weather_app)
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: weather_app
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
