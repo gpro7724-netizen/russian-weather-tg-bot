@@ -1,0 +1,436 @@
+[
+  {
+    "slug": "moscow",
+    "name_ru": "Москва",
+    "lat": 55.7558,
+    "lon": 37.6173,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "spb",
+    "name_ru": "Санкт-Петербург",
+    "lat": 59.9343,
+    "lon": 30.3351,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "novosibirsk",
+    "name_ru": "Новосибирск",
+    "lat": 55.0084,
+    "lon": 82.9357,
+    "timezone": "Asia/Krasnoyarsk"
+  },
+  {
+    "slug": "yekaterinburg",
+    "name_ru": "Екатеринбург",
+    "lat": 56.8389,
+    "lon": 60.6057,
+    "timezone": "Asia/Yekaterinburg"
+  },
+  {
+    "slug": "kazan",
+    "name_ru": "Казань",
+    "lat": 55.8304,
+    "lon": 49.0661,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "krasnoyarsk",
+    "name_ru": "Красноярск",
+    "lat": 56.0153,
+    "lon": 92.8932,
+    "timezone": "Asia/Krasnoyarsk"
+  },
+  {
+    "slug": "nizhny_novgorod",
+    "name_ru": "Нижний Новгород",
+    "lat": 56.2965,
+    "lon": 43.9361,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "chelyabinsk",
+    "name_ru": "Челябинск",
+    "lat": 55.1644,
+    "lon": 61.4368,
+    "timezone": "Asia/Yekaterinburg"
+  },
+  {
+    "slug": "ufa",
+    "name_ru": "Уфа",
+    "lat": 54.7388,
+    "lon": 55.9721,
+    "timezone": "Asia/Yekaterinburg"
+  },
+  {
+    "slug": "krasnodar",
+    "name_ru": "Краснодар",
+    "lat": 45.0353,
+    "lon": 38.9753,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "samara",
+    "name_ru": "Самара",
+    "lat": 53.1959,
+    "lon": 50.1002,
+    "timezone": "Europe/Samara"
+  },
+  {
+    "slug": "rostov_on_don",
+    "name_ru": "Ростов-на-Дону",
+    "lat": 47.2313,
+    "lon": 39.7233,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "omsk",
+    "name_ru": "Омск",
+    "lat": 54.9885,
+    "lon": 73.3242,
+    "timezone": "Asia/Omsk"
+  },
+  {
+    "slug": "voronezh",
+    "name_ru": "Воронеж",
+    "lat": 51.672,
+    "lon": 39.1843,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "perm",
+    "name_ru": "Пермь",
+    "lat": 58.0105,
+    "lon": 56.2502,
+    "timezone": "Asia/Yekaterinburg"
+  },
+  {
+    "slug": "volgograd",
+    "name_ru": "Волгоград",
+    "lat": 48.708,
+    "lon": 44.5133,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "saratov",
+    "name_ru": "Саратов",
+    "lat": 51.5924,
+    "lon": 46.0342,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "tyumen",
+    "name_ru": "Тюмень",
+    "lat": 57.1531,
+    "lon": 65.5343,
+    "timezone": "Asia/Yekaterinburg"
+  },
+  {
+    "slug": "tolyatti",
+    "name_ru": "Тольятти",
+    "lat": 53.5303,
+    "lon": 49.3461,
+    "timezone": "Europe/Samara"
+  },
+  {
+    "slug": "mahachkala",
+    "name_ru": "Махачкала",
+    "lat": 42.9849,
+    "lon": 47.5047,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "barnaul",
+    "name_ru": "Барнаул",
+    "lat": 53.3606,
+    "lon": 83.7546,
+    "timezone": "Asia/Barnaul"
+  },
+  {
+    "slug": "izhevsk",
+    "name_ru": "Ижевск",
+    "lat": 56.8498,
+    "lon": 53.2045,
+    "timezone": "Europe/Samara"
+  },
+  {
+    "slug": "khabarovsk",
+    "name_ru": "Хабаровск",
+    "lat": 48.4827,
+    "lon": 135.0838,
+    "timezone": "Asia/Vladivostok"
+  },
+  {
+    "slug": "ulyanovsk",
+    "name_ru": "Ульяновск",
+    "lat": 54.3282,
+    "lon": 48.3866,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "irkutsk",
+    "name_ru": "Иркутск",
+    "lat": 52.2978,
+    "lon": 104.2964,
+    "timezone": "Asia/Irkutsk"
+  },
+  {
+    "slug": "vladivostok",
+    "name_ru": "Владивосток",
+    "lat": 43.1198,
+    "lon": 131.8869,
+    "timezone": "Asia/Vladivostok"
+  },
+  {
+    "slug": "yaroslavl",
+    "name_ru": "Ярославль",
+    "lat": 57.6299,
+    "lon": 39.8737,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "stavropol",
+    "name_ru": "Ставрополь",
+    "lat": 45.0428,
+    "lon": 41.9734,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "sevastopol",
+    "name_ru": "Севастополь",
+    "lat": 44.6167,
+    "lon": 33.5254,
+    "timezone": "Europe/Simferopol"
+  },
+  {
+    "slug": "naberezhnye_chelny",
+    "name_ru": "Набережные Челны",
+    "lat": 55.7306,
+    "lon": 52.4112,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "tomsk",
+    "name_ru": "Томск",
+    "lat": 56.4846,
+    "lon": 84.9476,
+    "timezone": "Asia/Tomsk"
+  },
+  {
+    "slug": "balashikha",
+    "name_ru": "Балашиха",
+    "lat": 55.8094,
+    "lon": 37.9581,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "kemerovo",
+    "name_ru": "Кемерово",
+    "lat": 55.3547,
+    "lon": 86.0873,
+    "timezone": "Asia/Krasnoyarsk"
+  },
+  {
+    "slug": "orenburg",
+    "name_ru": "Оренбург",
+    "lat": 51.7682,
+    "lon": 55.097,
+    "timezone": "Asia/Yekaterinburg"
+  },
+  {
+    "slug": "novokuznetsk",
+    "name_ru": "Новокузнецк",
+    "lat": 53.7565,
+    "lon": 87.1361,
+    "timezone": "Asia/Krasnoyarsk"
+  },
+  {
+    "slug": "ryazan",
+    "name_ru": "Рязань",
+    "lat": 54.6294,
+    "lon": 39.7357,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "donetsk",
+    "name_ru": "Донецк",
+    "lat": 48.0159,
+    "lon": 37.8029,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "luhansk",
+    "name_ru": "Луганск",
+    "lat": 48.5671,
+    "lon": 39.3171,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "tula",
+    "name_ru": "Тула",
+    "lat": 54.2044,
+    "lon": 37.6175,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "kirov",
+    "name_ru": "Киров",
+    "lat": 58.6036,
+    "lon": 49.668,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "kaliningrad",
+    "name_ru": "Калининград",
+    "lat": 54.7104,
+    "lon": 20.5106,
+    "timezone": "Europe/Kaliningrad"
+  },
+  {
+    "slug": "bryansk",
+    "name_ru": "Брянск",
+    "lat": 53.2521,
+    "lon": 34.3717,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "kursk",
+    "name_ru": "Курск",
+    "lat": 51.7304,
+    "lon": 36.1926,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "magnitogorsk",
+    "name_ru": "Магнитогорск",
+    "lat": 53.4186,
+    "lon": 58.9794,
+    "timezone": "Asia/Yekaterinburg"
+  },
+  {
+    "slug": "sochi",
+    "name_ru": "Сочи",
+    "lat": 43.5992,
+    "lon": 39.7257,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "vladikavkaz",
+    "name_ru": "Владикавказ",
+    "lat": 43.0367,
+    "lon": 44.6678,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "grozny",
+    "name_ru": "Грозный",
+    "lat": 43.3178,
+    "lon": 45.6982,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "tambov",
+    "name_ru": "Тамбов",
+    "lat": 52.7317,
+    "lon": 41.4433,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "ivanovo",
+    "name_ru": "Иваново",
+    "lat": 56.9972,
+    "lon": 40.9714,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "tver",
+    "name_ru": "Тверь",
+    "lat": 56.8587,
+    "lon": 35.9176,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "simferopol",
+    "name_ru": "Симферополь",
+    "lat": 44.9572,
+    "lon": 34.1108,
+    "timezone": "Europe/Simferopol"
+  },
+  {
+    "slug": "kostroma",
+    "name_ru": "Кострома",
+    "lat": 57.7665,
+    "lon": 40.9269,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "volzhsky",
+    "name_ru": "Волжский",
+    "lat": 48.7858,
+    "lon": 44.7794,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "taganrog",
+    "name_ru": "Таганрог",
+    "lat": 47.2362,
+    "lon": 38.8969,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "sterlitamak",
+    "name_ru": "Стерлитамак",
+    "lat": 53.6247,
+    "lon": 55.9502,
+    "timezone": "Asia/Yekaterinburg"
+  },
+  {
+    "slug": "komsomolsk_na_amure",
+    "name_ru": "Комсомольск-на-Амуре",
+    "lat": 50.55,
+    "lon": 137.0,
+    "timezone": "Asia/Vladivostok"
+  },
+  {
+    "slug": "petrozavodsk",
+    "name_ru": "Петрозаводск",
+    "lat": 61.7849,
+    "lon": 34.3469,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "lipetsk",
+    "name_ru": "Липецк",
+    "lat": 52.6031,
+    "lon": 39.5708,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "arhangelsk",
+    "name_ru": "Архангельск",
+    "lat": 64.5401,
+    "lon": 40.5433,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "cheboksary",
+    "name_ru": "Чебоксары",
+    "lat": 56.1322,
+    "lon": 47.2515,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "kaluga",
+    "name_ru": "Калуга",
+    "lat": 54.5293,
+    "lon": 36.2754,
+    "timezone": "Europe/Moscow"
+  },
+  {
+    "slug": "smolensk",
+    "name_ru": "Смоленск",
+    "lat": 54.7826,
+    "lon": 32.0453,
+    "timezone": "Europe/Moscow"
+  }
+]

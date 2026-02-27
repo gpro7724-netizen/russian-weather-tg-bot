@@ -7,14 +7,21 @@
     tg.expand();
   }
 
+  var OPEN_METEO = "https://api.open-meteo.com/v1/forecast";
+  var TELEGRAM_BOT_URL = window.TELEGRAM_BOT_URL || "https://t.me/Russianweather1_bot";
+
   function getBaseUrl() {
     var path = window.location.pathname;
     var idx = path.lastIndexOf("/");
     return window.location.origin + (idx >= 0 ? path.substring(0, idx + 1) : "/");
   }
 
+  function setLogoLink() {
+    var link = document.getElementById("logoLink");
+    if (link) link.href = TELEGRAM_BOT_URL;
+  }
+
   function loadCities() {
-    // Используем общий список городов из weather_app
     var url = getBaseUrl() + "../weather_app/cities.json";
     return fetch(url).then(function (r) {
       if (!r.ok) throw new Error("Не удалось загрузить список городов");
@@ -22,49 +29,95 @@
     });
   }
 
+  function fetchCurrentTemp(lat, lon) {
+    return fetch(OPEN_METEO + "?" + new URLSearchParams({
+      latitude: lat,
+      longitude: lon,
+      current: "temperature_2m"
+    }).toString()).then(function (r) { return r.json(); }).then(function (d) {
+      return d.current && d.current.temperature_2m != null ? Math.round(d.current.temperature_2m) : null;
+    }).catch(function () { return null; });
+  }
+
+  function escapeHtml(s) {
+    var div = document.createElement("div");
+    div.textContent = s;
+    return div.innerHTML;
+  }
+
+  function makeMarkerHtml(name, tempStr) {
+    return "<div class=\"city-marker-wrap\">" +
+      "<div class=\"city-marker-temp\">" + escapeHtml(tempStr) + "</div>" +
+      "<div class=\"city-marker-name\">" + escapeHtml(name) + "</div>" +
+      "<div class=\"city-marker-dot\"></div>" +
+      "</div>";
+  }
+
   function initMap(cities) {
+    setLogoLink();
+
     var map = L.map("map", {
       zoomControl: true,
       attributionControl: true
     }).setView([61, 96], 3);
 
+    // Подложка с атрибуцией: только флаг РФ и OpenStreetMap (без флага Украины)
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 8,
       minZoom: 2,
-      attribution: "&copy; OpenStreetMap contributors"
+      attribution: "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors"
     }).addTo(map);
 
+    map.attributionControl.setPrefix("\uD83C\uDDF7\uD83C\uDDFA ");
+
+    var weatherUrlBase = getBaseUrl().replace(/\/map_app\/?$/, "/") + "weather_app/index.html#/city/";
     var slugToMarker = {};
 
     cities.forEach(function (c) {
-      var m = L.circleMarker([c.lat, c.lon], {
-        radius: 5,
-        color: "#e74c3c",
-        weight: 2,
-        fillColor: "#ff6b4a",
-        fillOpacity: 0.9
+      var tempStr = "—°";
+      var icon = L.divIcon({
+        className: "city-marker-div",
+        html: makeMarkerHtml(c.name_ru, tempStr),
+        iconSize: [80, 44],
+        iconAnchor: [40, 42]
       });
 
-      var weatherUrl = "../weather_app/index.html#/city/" + encodeURIComponent(c.slug);
+      var m = L.marker([c.lat, c.lon], { icon: icon });
+
       var popupHtml =
-        "<div class=\"popup-title\">" + c.name_ru + "</div>" +
-        "<div class=\"popup-actions\"><a href=\"" + weatherUrl + "\" data-slug=\"" + c.slug + "\">Погода</a></div>";
+        "<div class=\"popup-title\">" + escapeHtml(c.name_ru) + "</div>" +
+        "<div class=\"popup-temp\">— °C</div>" +
+        "<div class=\"popup-actions\"><a href=\"" + weatherUrlBase + encodeURIComponent(c.slug) + "\" data-slug=\"" + c.slug + "\">Открыть погоду</a></div>";
 
       m.bindPopup(popupHtml);
       m.addTo(map);
-      slugToMarker[c.slug] = m;
+      slugToMarker[c.slug] = { marker: m, city: c };
+
+      fetchCurrentTemp(c.lat, c.lon).then(function (t) {
+        var str = (t != null ? (t > 0 ? "+" : "") + t + "°" : "—°");
+        m.setIcon(L.divIcon({
+          className: "city-marker-div",
+          html: makeMarkerHtml(c.name_ru, str),
+          iconSize: [80, 44],
+          iconAnchor: [40, 42]
+        }));
+        var newTempText = (t != null ? (t > 0 ? "+" : "") + t + " °C" : "—");
+        var newPopupHtml =
+          "<div class=\"popup-title\">" + escapeHtml(c.name_ru) + "</div>" +
+          "<div class=\"popup-temp\">" + newTempText + "</div>" +
+          "<div class=\"popup-actions\"><a href=\"" + weatherUrlBase + encodeURIComponent(c.slug) + "\" data-slug=\"" + c.slug + "\">Открыть погоду</a></div>";
+        m.setPopupContent(newPopupHtml);
+      });
     });
 
-    // Центровка по городу, если задан ?city=slug
     var params = new URLSearchParams(window.location.search);
     var citySlug = params.get("city");
     if (citySlug && slugToMarker[citySlug]) {
-      var marker = slugToMarker[citySlug];
-      map.setView(marker.getLatLng(), 5);
-      marker.openPopup();
+      var rec = slugToMarker[citySlug];
+      map.setView(rec.marker.getLatLng(), 5);
+      rec.marker.openPopup();
     }
 
-    // Открытие погоды внутри Telegram WebApp, если возможно
     map.on("popupopen", function (e) {
       var popupNode = e.popup.getElement();
       if (!popupNode) return;
@@ -91,4 +144,3 @@
         "<p style=\"padding:12px;font-size:0.9rem;color:#c0392b;\">Не удалось загрузить карту городов.</p>";
     });
 })();
-
