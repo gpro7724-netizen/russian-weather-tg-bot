@@ -23,11 +23,15 @@
     var base = document.querySelector("base");
     if (base && base.href) {
       var u = new URL(base.href);
-      return u.origin + u.pathname.replace(/\/?index\.html$/, "") + "/";
+      return u.origin + u.pathname.replace(/\/?index\.html$/, "").replace(/\/?$/, "/");
     }
     var path = window.location.pathname;
     var idx = path.lastIndexOf("/");
     return window.location.origin + (idx >= 0 ? path.substring(0, idx + 1) : "/");
+  }
+
+  function getAssetsBase() {
+    return getBaseUrl() + "assets/";
   }
 
   function loadCities() {
@@ -66,11 +70,37 @@
     return div.innerHTML;
   }
 
-  function renderList() {
+  function cityImageCandidates(slug) {
+    return [
+      "historic_" + slug + ".png",
+      "historic_" + slug + "_2.png",
+      "historic_" + slug + "_3.png",
+      "landmark_" + slug + "_1.png",
+      "landmark_" + slug + "_2.png",
+      "city_" + slug + "_1.png",
+      "city_" + slug + "_2.png"
+    ];
+  }
+
+  function renderHome() {
+    var fragment = document.createDocumentFragment();
+    var landing = document.createElement("div");
+    landing.className = "landing";
+    landing.innerHTML =
+      "<div class=\"hero\">Погода по городам России</div>" +
+      "<p class=\"desc\">Мы бот, который упрощает поиск погоды. Выберите город — получите актуальную погоду, фото исторического центра и место на карте России.</p>" +
+      "<div class=\"map-section\"><h3>Карта России</h3><div class=\"map-wrap map-landing\"><img src=\"" + MAP_RUSSIA_URL + "\" alt=\"Карта России\" width=\"600\" height=\"450\"></div></div>" +
+      "<a href=\"#/cities\" class=\"btn-city\">Выбрать город</a>";
+    fragment.appendChild(landing);
+    document.getElementById("app").innerHTML = "";
+    document.getElementById("app").appendChild(fragment);
+  }
+
+  function renderCities() {
     var fragment = document.createDocumentFragment();
     var header = document.createElement("div");
     header.className = "header";
-    header.innerHTML = "<h1>Города</h1>";
+    header.innerHTML = "<a href=\"#/\" class=\"back-link visible\">← Назад</a><h1>Выбор города</h1>";
     fragment.appendChild(header);
     var ul = document.createElement("ul");
     ul.className = "city-list";
@@ -95,50 +125,82 @@
     });
   }
 
+  function setCityImageWithFallback(imgEl, slug) {
+    var assetsBase = getAssetsBase();
+    var candidates = cityImageCandidates(slug);
+    var idx = 0;
+    imgEl.alt = "Исторический центр";
+    imgEl.className = "historic-block";
+    function tryNext() {
+      if (idx >= candidates.length) {
+        imgEl.classList.add("err");
+        imgEl.alt = "";
+        imgEl.src = "";
+        imgEl.textContent = "Красивый исторический центр";
+        return;
+      }
+      imgEl.src = assetsBase + candidates[idx];
+      idx += 1;
+    }
+    imgEl.onerror = function () { tryNext(); };
+    imgEl.onload = function () { imgEl.onerror = null; };
+    tryNext();
+  }
+
   function renderCity(slug) {
     var city = cities.find(function (c) { return c.slug === slug; });
     if (!city) {
       document.getElementById("app").innerHTML = "<p class=\"error-msg\">Город не найден.</p>";
       return;
     }
-    var base = getBaseUrl();
     var fragment = document.createDocumentFragment();
     var header = document.createElement("div");
     header.className = "header";
-    header.innerHTML = "<a href=\"#/\" class=\"back-link visible\">← Назад</a><h1>" + escapeHtml(city.name_ru) + "</h1>";
+    header.innerHTML = "<a href=\"#/cities\" class=\"back-link visible\">← Назад</a><h1>" + escapeHtml(city.name_ru) + "</h1>";
     fragment.appendChild(header);
+
     var historicImg = document.createElement("img");
-    historicImg.alt = "Исторический центр";
-    historicImg.className = "historic-block";
-    historicImg.src = base + "assets/historic_" + encodeURIComponent(slug) + ".png";
-    historicImg.onerror = function () {
-      historicImg.classList.add("err");
-      historicImg.alt = "";
-      historicImg.src = "";
-      historicImg.textContent = "Фото центра города";
-    };
+    setCityImageWithFallback(historicImg, slug);
     fragment.appendChild(historicImg);
+
     var currentBlock = document.createElement("div");
     currentBlock.className = "current-weather loading";
     currentBlock.textContent = "Загрузка погоды...";
     fragment.appendChild(currentBlock);
+
     var dayBlock = document.createElement("div");
     dayBlock.className = "day-forecast";
     dayBlock.innerHTML = "<strong>Прогноз на 2 дня</strong>";
     fragment.appendChild(dayBlock);
+
     var pc = lonLatToPercent(city.lon, city.lat);
-    var mapWrap = document.createElement("div");
-    mapWrap.className = "map-wrap";
-    mapWrap.innerHTML = "<img src=\"" + MAP_RUSSIA_URL + "\" alt=\"Карта России\" width=\"700\" height=\"450\">" + "<span class=\"map-marker\" style=\"left:" + pc.x + "%;top:" + pc.y + "%\"></span>";
-    fragment.appendChild(mapWrap);
+    var mapSection = document.createElement("div");
+    mapSection.className = "map-section";
+    mapSection.innerHTML =
+      "<h3>На карте России</h3>" +
+      "<div class=\"map-wrap\">" +
+      "<img src=\"" + MAP_RUSSIA_URL + "\" alt=\"Карта России\" width=\"700\" height=\"450\">" +
+      "<span class=\"map-marker\" style=\"left:" + pc.x + "%;top:" + pc.y + "%\"></span>" +
+      "</div>";
+    fragment.appendChild(mapSection);
+
     document.getElementById("app").innerHTML = "";
     document.getElementById("app").appendChild(fragment);
+
     fetchWeather(city.lat, city.lon, city.timezone).then(function (data) {
       var cur = data.current;
       if (cur) {
         var pressureMm = hPaToMmHg(cur.surface_pressure);
         currentBlock.className = "current-weather";
-        currentBlock.innerHTML = "<div class=\"temp-main\">" + (cur.temperature_2m > 0 ? "+" : "") + Math.round(cur.temperature_2m) + "°C</div>" + "<div class=\"desc\">" + escapeHtml(weatherCodeToDesc(cur.weather_code)) + "</div>" + "<div class=\"details\">" + "Ощущается: " + (cur.apparent_temperature != null ? (cur.apparent_temperature > 0 ? "+" : "") + Math.round(cur.apparent_temperature) + "°C" : "—") + " · " + "Влажность: " + (cur.relative_humidity_2m != null ? cur.relative_humidity_2m + "%" : "—") + " · " + "Ветер: " + (cur.wind_speed_10m != null ? cur.wind_speed_10m + " м/с" : "—") + " · " + "Давление: " + (pressureMm != null ? pressureMm + " мм рт. ст." : "—") + "</div>";
+        currentBlock.innerHTML =
+          "<div class=\"temp-main\">" + (cur.temperature_2m > 0 ? "+" : "") + Math.round(cur.temperature_2m) + "°C</div>" +
+          "<div class=\"desc\">" + escapeHtml(weatherCodeToDesc(cur.weather_code)) + "</div>" +
+          "<div class=\"details\">" +
+          "Ощущается: " + (cur.apparent_temperature != null ? (cur.apparent_temperature > 0 ? "+" : "") + Math.round(cur.apparent_temperature) + "°C" : "—") + " · " +
+          "Влажность: " + (cur.relative_humidity_2m != null ? cur.relative_humidity_2m + "%" : "—") + " · " +
+          "Ветер: " + (cur.wind_speed_10m != null ? cur.wind_speed_10m + " м/с" : "—") + " · " +
+          "Давление: " + (pressureMm != null ? pressureMm + " мм рт. ст." : "—") +
+          "</div>";
       }
       var daily = data.daily;
       if (daily && daily.time && daily.temperature_2m_max && daily.weather_code) {
@@ -160,15 +222,24 @@
 
   function route() {
     var hash = window.location.hash || "#/";
-    var match = hash.match(/^#\/city\/([^/]+)/);
-    if (match) {
-      renderCity(decodeURIComponent(match[1]));
-    } else {
-      if (cities.length) renderList();
-      else loadCities().then(renderList).catch(function (e) {
+    if (hash === "#/" || hash === "#") {
+      renderHome();
+      return;
+    }
+    var citiesMatch = hash.match(/^#\/cities\/?$/);
+    if (citiesMatch) {
+      if (cities.length) renderCities();
+      else loadCities().then(renderCities).catch(function (e) {
         document.getElementById("app").innerHTML = "<p class=\"error-msg\">" + escapeHtml(e.message) + "</p>";
       });
+      return;
     }
+    var cityMatch = hash.match(/^#\/city\/([^/]+)/);
+    if (cityMatch) {
+      renderCity(decodeURIComponent(cityMatch[1]));
+      return;
+    }
+    renderHome();
   }
 
   window.addEventListener("hashchange", route);

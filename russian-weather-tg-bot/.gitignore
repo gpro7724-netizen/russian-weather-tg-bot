@@ -4,4 +4,6 @@ __pycache__/
 *.pyc
 assets/*.png
 !assets/.gitkeep
+!weather_app/assets/
+!weather_app/assets/*.png
 awesome-agent-skills/
