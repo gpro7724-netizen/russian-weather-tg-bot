@@ -3,7 +3,7 @@
 
   const MAP_EXTENT = { lonMin: 19, latMin: 41, lonMax: 180, latMax: 82 };
   const OPEN_METEO = "https://api.open-meteo.com/v1/forecast";
-  const MAP_RUSSIA_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Russia_orthographic_map.svg/600px-Russia_orthographic_map.svg.png";
+  const MAP_RUSSIA_URL = "assets/map_russia.png";
 
   let cities = [];
 

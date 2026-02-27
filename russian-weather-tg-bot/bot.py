@@ -492,7 +492,7 @@ MAP_RUSSIA_PATH = os.path.join(_script_dir, "assets", "map_russia.png")
 # Эталонная тёмная карта России для погоды (форма страны + границы регионов)
 RUSSIA_WEATHER_MAP_BASE = os.path.join(_script_dir, "assets", "russia_weather_base.png")
 # Запасная карта по URL, если локального файла нет
-MAP_RUSSIA_URL = "https://upload.wikimedia.org/wikipedia/commons/thumb/0/07/Russia_orthographic_map.svg/600px-Russia_orthographic_map.svg.png"
+MAP_RUSSIA_URL = "https://gpro7724-netizen.github.io/russian-weather-tg-bot/weather_app/assets/map_russia.png"
 # Контур России (долгота, широта) — замкнутый полигон по часовой стрелке с северо-запада
 RUSSIA_OUTLINE_LONLAT = [
     (19.6, 54.4), (21.1, 55.3), (28.2, 59.9), (30.9, 69.1), (44.2, 76.0), (58.6, 76.5),
@@ -789,7 +789,7 @@ def _generate_historic_center_image(city: City) -> bytes:
 
 
 def _city_image_candidates(city: City) -> List[str]:
-    """Список имён файлов картинок для города: 5 фото исторического центра (красота города, без промышленных) + до 3 достопримечательностей."""
+    """Список имён файлов картинок для города: historic, landmark, city_* (как в репозитории city-historic-photos)."""
     return [
         f"historic_{city.slug}.png",
         f"historic_{city.slug}_2.png",
@@ -804,6 +804,12 @@ def _city_image_candidates(city: City) -> List[str]:
         f"landmark_{city.slug}_1.png",
         f"landmark_{city.slug}_2.png",
         f"landmark_{city.slug}_3.png",
+        f"city_{city.slug}_1.png",
+        f"city_{city.slug}_2.png",
+        f"city_{city.slug}_3.png",
+        f"city_{city.slug}_4.png",
+        f"city_{city.slug}_5.png",
+        f"city_{city.slug}_6.png",
     ]
 
 
