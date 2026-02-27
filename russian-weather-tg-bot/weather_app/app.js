@@ -3,15 +3,9 @@
 
   const MAP_EXTENT = { lonMin: 19, latMin: 41, lonMax: 180, latMax: 82 };
   const OPEN_METEO = "https://api.open-meteo.com/v1/forecast";
-  const MAP_RUSSIA_URL = "assets/map_russia.png"; // запасной фон, если SVG не отрисуется
-  const RUSSIA_OUTLINE_LONLAT = [
-    [19.6, 54.4], [21.1, 55.3], [28.2, 59.9], [30.9, 69.1], [44.2, 76.0], [58.6, 76.5],
-    [82.5, 77.6], [104.3, 77.0], [140.0, 75.2], [180.0, 71.5], [180.0, 66.0], [178.0, 62.0],
-    [164.0, 55.0], [143.0, 50.0], [135.0, 43.0], [130.0, 42.5], [127.0, 40.0], [113.0, 41.0],
-    [87.5, 41.0], [68.0, 45.0], [53.0, 41.2], [39.0, 47.0], [37.5, 46.0], [33.5, 45.2],
-    [33.5, 44.4], [36.8, 44.0], [39.0, 43.5], [48.0, 42.0], [47.5, 41.0], [40.0, 41.0],
-    [28.0, 41.2], [27.5, 45.0], [19.6, 54.4]
-  ];
+  const MAP_RUSSIA_URL = "assets/map_russia.png";
+
+  var tg = null;
 
   let cities = [];
 
@@ -89,29 +83,14 @@
       "city_" + slug + "_2.png"
     ];
   }
-
-  function buildRussiaSvg(city) {
-    try {
-      var outlinePoints = RUSSIA_OUTLINE_LONLAT.map(function (p) {
-        var pp = lonLatToPercent(p[0], p[1]);
-        return pp.x.toFixed(2) + "," + pp.y.toFixed(2);
-      }).join(" ");
-      var marker = "";
-      if (city) {
-        var cpt = lonLatToPercent(city.lon, city.lat);
-        marker =
-          "<circle cx=\"" + cpt.x.toFixed(2) + "\" cy=\"" + cpt.y.toFixed(2) + "\" r=\"2.4\" " +
-          "fill=\"#e74c3c\" stroke=\"#ffffff\" stroke-width=\"0.9\" />";
-      }
-      return (
-        "<svg viewBox=\"0 0 100 100\" class=\"map-svg\" xmlns=\"http://www.w3.org/2000/svg\">" +
-        "<rect x=\"0\" y=\"0\" width=\"100\" height=\"100\" fill=\"#d8dde7\" />" +
-        "<polygon points=\"" + outlinePoints + "\" fill=\"#fdfdfd\" stroke=\"#b8becb\" stroke-width=\"0.7\" />" +
-        marker +
-        "</svg>"
-      );
-    } catch (e) {
-      return "<img src=\"" + MAP_RUSSIA_URL + "\" alt=\"Карта России\" width=\"600\" height=\"450\">";
+  function openMapApp(citySlug) {
+    var base = getBaseUrl();
+    var mapBase = base.replace(/\/weather_app\/?$/, "/map_app/");
+    var url = mapBase + (citySlug ? ("?city=" + encodeURIComponent(citySlug)) : "");
+    if (tg && tg.openLink) {
+      tg.openLink(url);
+    } else {
+      window.open(url, "_blank", "noopener");
     }
   }
 
@@ -122,11 +101,18 @@
     landing.innerHTML =
       "<div class=\"hero\">Погода по городам России</div>" +
       "<p class=\"desc\">Мы бот, который упрощает поиск погоды. Выберите город — получите актуальную погоду, фото исторического центра и место на карте России.</p>" +
-      "<div class=\"map-section\"><h3>Карта России</h3><div class=\"map-wrap map-landing\">" + buildRussiaSvg(null) + "</div></div>" +
+      "<div class=\"map-section\"><h3>Карта России</h3><div class=\"map-wrap map-landing\"><img src=\"" + MAP_RUSSIA_URL + "\" alt=\"Карта России\" width=\"600\" height=\"450\"></div></div>" +
       "<a href=\"#/cities\" class=\"btn-city\">Выбрать город</a>";
     fragment.appendChild(landing);
     document.getElementById("app").innerHTML = "";
     document.getElementById("app").appendChild(fragment);
+
+    var mapWrap = document.querySelector(".map-wrap.map-landing");
+    if (mapWrap) {
+      mapWrap.addEventListener("click", function () {
+        openMapApp(null);
+      });
+    }
   }
 
   function renderCities() {
@@ -211,12 +197,25 @@
     mapSection.innerHTML =
       "<h3>На карте России</h3>" +
       "<div class=\"map-wrap\">" +
-      buildRussiaSvg(city) +
+      "<img src=\"" + MAP_RUSSIA_URL + "\" alt=\"Карта России\" width=\"700\" height=\"450\">" +
       "</div>";
     fragment.appendChild(mapSection);
 
     document.getElementById("app").innerHTML = "";
     document.getElementById("app").appendChild(fragment);
+
+    var pc = lonLatToPercent(city.lon, city.lat);
+    var marker = document.createElement("span");
+    marker.className = "map-marker";
+    marker.style.left = pc.x + "%";
+    marker.style.top = pc.y + "%";
+    var wrapEl = document.querySelector(".map-section .map-wrap");
+    if (wrapEl) {
+      wrapEl.appendChild(marker);
+      wrapEl.addEventListener("click", function () {
+        openMapApp(city.slug);
+      });
+    }
 
     fetchWeather(city.lat, city.lon, city.timezone).then(function (data) {
       var cur = data.current;
@@ -274,7 +273,7 @@
   }
 
   window.addEventListener("hashchange", route);
-  var tg = window.Telegram && window.Telegram.WebApp;
+  tg = window.Telegram && window.Telegram.WebApp;
   if (tg) {
     tg.ready();
     tg.expand();
