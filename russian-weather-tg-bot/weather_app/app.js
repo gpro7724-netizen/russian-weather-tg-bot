@@ -407,23 +407,58 @@
   function setCityImageWithFallback(imgEl, slug) {
     var assetsBase = getAssetsBase();
     var candidates = cityImageCandidates(slug);
-    var idx = 0;
+    var currentIndex = 0;
+
     imgEl.alt = "Исторический центр";
     imgEl.className = "historic-block";
-    function tryNext() {
-      if (idx >= candidates.length) {
+
+    function showFrom(startIndex, step) {
+      if (!candidates || !candidates.length) {
         imgEl.classList.add("err");
         imgEl.alt = "";
         imgEl.src = "";
         imgEl.textContent = "Красивый исторический центр";
         return;
       }
-      imgEl.src = assetsBase + candidates[idx];
-      idx += 1;
+      var attempts = 0;
+      var dir = step >= 0 ? 1 : -1;
+      function tryIndex(idx) {
+        if (attempts >= candidates.length) {
+          imgEl.classList.add("err");
+          imgEl.alt = "";
+          imgEl.src = "";
+          imgEl.textContent = "Красивый исторический центр";
+          return;
+        }
+        var wrapped = ((idx % candidates.length) + candidates.length) % candidates.length;
+        imgEl.onerror = function () {
+          attempts += 1;
+          tryIndex(wrapped + dir);
+        };
+        imgEl.onload = function () {
+          imgEl.onerror = null;
+          currentIndex = wrapped;
+        };
+        imgEl.src = assetsBase + candidates[wrapped];
+      }
+      tryIndex(startIndex);
     }
-    imgEl.onerror = function () { tryNext(); };
-    imgEl.onload = function () { imgEl.onerror = null; };
-    tryNext();
+
+    function goTo(delta) {
+      if (!candidates || !candidates.length) return;
+      var start = currentIndex + delta;
+      showFrom(start, delta);
+    }
+
+    var parent = imgEl.parentNode;
+    if (parent) {
+      var prevBtn = parent.querySelector(".photo-nav-prev");
+      var nextBtn = parent.querySelector(".photo-nav-next");
+      if (prevBtn) prevBtn.addEventListener("click", function () { goTo(-1); });
+      if (nextBtn) nextBtn.addEventListener("click", function () { goTo(1); });
+    }
+
+    showFrom(0, 1);
   }
 
   function renderCity(slug) {
@@ -442,9 +477,24 @@
       "<h1>" + escapeHtml(city.name_ru) + "</h1>";
     fragment.appendChild(header);
 
+    var photoWrap = document.createElement("div");
+    photoWrap.className = "city-photo-wrap";
+    var prevBtn = document.createElement("button");
+    prevBtn.type = "button";
+    prevBtn.className = "photo-nav photo-nav-prev";
+    prevBtn.setAttribute("aria-label", "Предыдущее фото");
+    prevBtn.innerHTML = "‹";
+    var nextBtn = document.createElement("button");
+    nextBtn.type = "button";
+    nextBtn.className = "photo-nav photo-nav-next";
+    nextBtn.setAttribute("aria-label", "Следующее фото");
+    nextBtn.innerHTML = "›";
     var historicImg = document.createElement("img");
+    photoWrap.appendChild(prevBtn);
+    photoWrap.appendChild(historicImg);
+    photoWrap.appendChild(nextBtn);
+    fragment.appendChild(photoWrap);
     setCityImageWithFallback(historicImg, slug);
-    fragment.appendChild(historicImg);
 
     var currentBlock = document.createElement("div");
     currentBlock.className = "current-weather loading";
