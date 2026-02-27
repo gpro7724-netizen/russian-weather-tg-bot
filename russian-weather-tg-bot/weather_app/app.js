@@ -23,6 +23,11 @@
   let cityEmblems = {};
   var LANDING_BG_IMAGES = [
     "historic_moscow.png",
+    "historic_moscow_2.png",
+    "historic_moscow_3.png",
+    "historic_moscow_4.png",
+    "historic_moscow_5.png",
+    "historic_moscow_6.png",
     "historic_spb.png",
     "historic_novosibirsk.png",
     "historic_yekaterinburg.png",
