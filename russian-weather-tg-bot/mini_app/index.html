@@ -18,6 +18,9 @@
       justify-content: center;
       padding: 8px;
     }
+    body.fullscreen-game {
+      padding: 0;
+    }
     .hud {
       display: flex;
       justify-content: space-between;
@@ -31,6 +34,16 @@
     .hud-score { font-weight: bold; color: #ffd700; }
     .hud-hearts { font-size: 18px; letter-spacing: 2px; }
     .hud-level { color: #aaa; font-size: 13px; }
+    .fullscreen-toggle {
+      margin-left: auto;
+      padding: 4px 10px;
+      font-size: 13px;
+      border-radius: 999px;
+      border: none;
+      background: #1f2937;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
     #gameCanvas {
       display: block;
       background: #000;
@@ -84,6 +97,7 @@
     <span class="hud-score">⭐ <span id="scoreEl">0</span></span>
     <span class="hud-hearts" id="livesEl">❤️❤️❤️</span>
     <span class="hud-level" id="levelEl">Карта 1/6</span>
+    <button type="button" id="fullscreenBtn" class="fullscreen-toggle">⛶</button>
   </div>
   <canvas id="gameCanvas"></canvas>
   <div class="controls">
@@ -112,7 +126,7 @@
   const H = ROWS * CELL;
   const WALL = 1, DOT = 2, POWER = 3, EMPTY = 0;
 
-  const PAC_SPEED = 0.1;
+  const PAC_SPEED = 0.14;
   const POWER_SEC = 8;
   let ghostTick = 0;
 
@@ -276,6 +290,7 @@
   const livesEl = document.getElementById('livesEl');
   const levelEl = document.getElementById('levelEl');
   const startBtn = document.getElementById('startBtn');
+  const fullscreenBtn = document.getElementById('fullscreenBtn');
 
   const dirs = [{x:0,y:-1},{x:1,y:0},{x:0,y:1},{x:-1,y:0}];
   let pac = { px: 9, py: 15, dir: 0, nextDir: 0, frame: 0 };
@@ -302,6 +317,15 @@
   }
   resize();
   window.addEventListener('resize', resize);
+
+  let isFullscreen = false;
+  function applyFullscreen(on) {
+    isFullscreen = on;
+    document.body.classList.toggle('fullscreen-game', on);
+    if (tg && tg.expand && on) {
+      try { tg.expand(); } catch (e) {}
+    }
+  }
 
   function getTile(r, c) {
     if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return WALL;
@@ -530,7 +554,7 @@
 
     movePacman(dt);
     ghostTick += dt;
-    if (ghostTick >= 120) {
+    if (ghostTick >= 150) {
       ghostTick = 0;
       ghosts.forEach(moveGhostStep);
       checkCollision();
@@ -555,6 +579,24 @@
     if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') { pac.nextDir = 2; e.preventDefault(); }
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') { pac.nextDir = 3; e.preventDefault(); }
   });
+
+  if (fullscreenBtn) {
+    fullscreenBtn.addEventListener('click', () => {
+      const target = document.documentElement;
+      if (!document.fullscreenElement && target.requestFullscreen) {
+        target.requestFullscreen().catch(() => {});
+        applyFullscreen(true);
+        fullscreenBtn.textContent = '↙';
+      } else if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+        applyFullscreen(false);
+        fullscreenBtn.textContent = '⛶';
+      } else {
+        applyFullscreen(!isFullscreen);
+        fullscreenBtn.textContent = isFullscreen ? '↙' : '⛶';
+      }
+    });
+  }
 
   document.querySelectorAll('.controls button').forEach(btn => {
     btn.addEventListener('click', () => {

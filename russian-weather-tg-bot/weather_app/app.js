@@ -87,6 +87,24 @@
     });
   }
 
+  function fetchJsonWithRetry(url, maxAttempts) {
+    var attempts = typeof maxAttempts === "number" && maxAttempts > 0 ? maxAttempts : 3;
+    function attempt(n) {
+      return fetch(url).then(function (r) {
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.json();
+      }).catch(function (err) {
+        if (n >= attempts - 1) throw err;
+        return new Promise(function (resolve) {
+          setTimeout(function () {
+            resolve(attempt(n + 1));
+          }, 500 * (n + 1));
+        });
+      });
+    }
+    return attempt(0);
+  }
+
   function fetchWeather(lat, lon, timezone) {
     var params = new URLSearchParams({
       latitude: lat,
@@ -96,10 +114,8 @@
       daily: "temperature_2m_max,temperature_2m_min,weather_code",
       forecast_days: 2
     });
-    return fetch(OPEN_METEO + "?" + params.toString()).then(function (r) {
-      if (!r.ok) throw new Error("Не удалось загрузить погоду");
-      return r.json();
-    });
+    var url = OPEN_METEO + "?" + params.toString();
+    return fetchJsonWithRetry(url, 3);
   }
 
   function hPaToMmHg(hPa) {
@@ -168,11 +184,12 @@
   }
 
   function fetchCurrentTemp(lat, lon) {
-    return fetch(OPEN_METEO + "?" + new URLSearchParams({
+    var url = OPEN_METEO + "?" + new URLSearchParams({
       latitude: lat,
       longitude: lon,
       current: "temperature_2m"
-    }).toString()).then(function (r) { return r.json(); }).then(function (d) {
+    }).toString();
+    return fetchJsonWithRetry(url, 2).then(function (d) {
       return d.current && d.current.temperature_2m != null ? Math.round(d.current.temperature_2m) : null;
     }).catch(function () { return null; });
   }
@@ -521,37 +538,51 @@
       initCityMap(city);
     }, 50);
 
-    fetchWeather(city.lat, city.lon, city.timezone).then(function (data) {
-      var cur = data.current;
-      if (cur) {
-        var pressureMm = hPaToMmHg(cur.surface_pressure);
-        currentBlock.className = "current-weather";
-        currentBlock.innerHTML =
-          "<div class=\"temp-main\">" + (cur.temperature_2m > 0 ? "+" : "") + Math.round(cur.temperature_2m) + "°C</div>" +
-          "<div class=\"desc\">" + escapeHtml(weatherCodeToDesc(cur.weather_code)) + "</div>" +
-          "<div class=\"details\">" +
-          "Ощущается: " + (cur.apparent_temperature != null ? (cur.apparent_temperature > 0 ? "+" : "") + Math.round(cur.apparent_temperature) + "°C" : "—") + " · " +
-          "Влажность: " + (cur.relative_humidity_2m != null ? cur.relative_humidity_2m + "%" : "—") + " · " +
-          "Ветер: " + (cur.wind_speed_10m != null ? cur.wind_speed_10m + " м/с" : "—") + " · " +
-          "Давление: " + (pressureMm != null ? pressureMm + " мм рт. ст." : "—") +
-          "</div>";
-      }
-      var daily = data.daily;
-      if (daily && daily.time && daily.temperature_2m_max && daily.weather_code) {
-        var times = daily.time, maxT = daily.temperature_2m_max, minT = daily.temperature_2m_min, codes = daily.weather_code;
-        var html = "<strong>Прогноз на 2 дня</strong>";
-        for (var i = 0; i < times.length; i++) {
-          var d = new Date(times[i]);
-          var dayLabel = i === 0 ? "Сегодня" : (i === 1 ? "Завтра" : (d.getDate() + "." + (d.getMonth() + 1)));
-          var tempStr = (maxT[i] != null && minT[i] != null) ? (maxT[i] > 0 ? "+" : "") + Math.round(maxT[i]) + "° / " + (minT[i] > 0 ? "+" : "") + Math.round(minT[i]) + "°" : "—";
-          html += "<div class=\"day-forecast\"><span class=\"slot\">" + escapeHtml(dayLabel) + "</span><span class=\"temp\">" + tempStr + "</span><span>" + escapeHtml(weatherCodeToDesc(codes[i])) + "</span></div>";
+    function loadCityWeather() {
+      fetchWeather(city.lat, city.lon, city.timezone).then(function (data) {
+        var cur = data.current;
+        if (cur) {
+          var pressureMm = hPaToMmHg(cur.surface_pressure);
+          currentBlock.className = "current-weather";
+          currentBlock.innerHTML =
+            "<div class=\"temp-main\">" + (cur.temperature_2m > 0 ? "+" : "") + Math.round(cur.temperature_2m) + "°C</div>" +
+            "<div class=\"desc\">" + escapeHtml(weatherCodeToDesc(cur.weather_code)) + "</div>" +
+            "<div class=\"details\">" +
+            "Ощущается: " + (cur.apparent_temperature != null ? (cur.apparent_temperature > 0 ? "+" : "") + Math.round(cur.apparent_temperature) + "°C" : "—") + " · " +
+            "Влажность: " + (cur.relative_humidity_2m != null ? cur.relative_humidity_2m + "%" : "—") + " · " +
+            "Ветер: " + (cur.wind_speed_10m != null ? cur.wind_speed_10m + " м/с" : "—") + " · " +
+            "Давление: " + (pressureMm != null ? pressureMm + " мм рт. ст." : "—") +
+            "</div>";
         }
-        dayBlock.innerHTML = html;
-      }
-    }).catch(function () {
-      currentBlock.className = "current-weather error-msg";
-      currentBlock.textContent = "Не удалось загрузить погоду. Проверьте интернет.";
-    });
+        var daily = data.daily;
+        if (daily && daily.time && daily.temperature_2m_max && daily.weather_code) {
+          var times = daily.time, maxT = daily.temperature_2m_max, minT = daily.temperature_2m_min, codes = daily.weather_code;
+          var html = "<strong>Прогноз на 2 дня</strong>";
+          for (var i = 0; i < times.length; i++) {
+            var d = new Date(times[i]);
+            var dayLabel = i === 0 ? "Сегодня" : (i === 1 ? "Завтра" : (d.getDate() + "." + (d.getMonth() + 1)));
+            var tempStr = (maxT[i] != null && minT[i] != null) ? (maxT[i] > 0 ? "+" : "") + Math.round(maxT[i]) + "° / " + (minT[i] > 0 ? "+" : "") + Math.round(minT[i]) + "°" : "—";
+            html += "<div class=\"day-forecast\"><span class=\"slot\">" + escapeHtml(dayLabel) + "</span><span class=\"temp\">" + tempStr + "</span><span>" + escapeHtml(weatherCodeToDesc(codes[i])) + "</span></div>";
+          }
+          dayBlock.innerHTML = html;
+        }
+      }).catch(function () {
+        currentBlock.className = "current-weather error-msg";
+        currentBlock.innerHTML =
+          "<p>Не удалось загрузить погоду. Проверьте интернет.</p>" +
+          "<button type=\"button\" class=\"retry-btn\">Повторить</button>";
+        var btn = currentBlock.querySelector(".retry-btn");
+        if (btn) {
+          btn.addEventListener("click", function () {
+            currentBlock.className = "current-weather loading";
+            currentBlock.textContent = "Повторная попытка загрузки...";
+            loadCityWeather();
+          });
+        }
+      });
+    }
+
+    loadCityWeather();
   }
 
   function route() {
@@ -597,6 +628,31 @@
     var start = tg.initDataUnsafe && tg.initDataUnsafe.start_param;
     if (start && start.length) window.location.hash = "#/city/" + encodeURIComponent(start);
   }
+
+  (function setupFullscreenToggle() {
+    var btn = document.getElementById("fullscreenToggleApp");
+    if (!btn) return;
+    var active = false;
+    function apply(on) {
+      active = on;
+      document.body.classList.toggle("fullscreen-app", on);
+      btn.textContent = on ? "↙" : "⛶";
+      if (tg && tg.expand && on) {
+        try { tg.expand(); } catch (e) {}
+      }
+    }
+    btn.addEventListener("click", function () {
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(function () {});
+        apply(true);
+      } else if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(function () {});
+        apply(false);
+      } else {
+        apply(!active);
+      }
+    });
+  })();
   loadCities().then(function () {
     return loadEmblems();
   }).then(function () {

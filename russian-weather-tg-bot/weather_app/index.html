@@ -24,6 +24,9 @@
       padding-top: calc(12px + env(safe-area-inset-top));
       overflow-x: hidden;
     }
+    body.fullscreen-app {
+      padding: 0;
+    }
     .header {
       display: flex;
       align-items: center;
@@ -249,6 +252,20 @@
       font-size: 0.9rem;
       color: #bbb;
     }
+    .current-weather .retry-btn {
+      margin-top: 14px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      border: none;
+      background: #0ea5e9;
+      color: #fff;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+    .current-weather .retry-btn:hover { opacity: 0.9; }
+    .current-weather .retry-btn:active { transform: translateY(1px); opacity: 0.85; }
     .day-forecast {
       background: rgba(255,255,255,0.06);
       border-radius: 12px;
@@ -330,6 +347,7 @@
   </style>
 </head>
 <body>
+  <button type="button" id="fullscreenToggleApp" style="position:fixed;top:8px;right:8px;z-index:9999;border:none;border-radius:999px;padding:6px 10px;font-size:13px;background:rgba(15,23,42,0.9);color:#e5e7eb;cursor:pointer;">⛶</button>
   <div id="app">
     <div class="loading">Загрузка...</div>
   </div>
