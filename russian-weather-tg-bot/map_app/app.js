@@ -9,10 +9,13 @@
 
   var OPEN_METEO = "https://api.open-meteo.com/v1/forecast";
   var TELEGRAM_BOT_URL = window.TELEGRAM_BOT_URL || "https://t.me/Russianweather1_bot";
+  var OPENWEATHER_TILE_KEY = (window.OPENWEATHER_TILE_KEY || "").trim();
+  var OPENWEATHER_TILE_BASE = "https://tile.openweathermap.org/map";
   var map = null;
   var slugToMarker = {};
   var citiesData = [];
   var cityEmblems = {};
+  var mapWeatherState = null;
 
   function getBaseUrl() {
     var path = window.location.pathname;
@@ -44,6 +47,64 @@
     }).catch(function () { return {}; });
   }
 
+  function createWeatherTileLayersForMap() {
+    if (!OPENWEATHER_TILE_KEY) return null;
+    var key = OPENWEATHER_TILE_KEY;
+    var common = {
+      attribution: "&copy; OpenWeatherMap",
+      opacity: 0.6
+    };
+    return {
+      precipitation: L.tileLayer(OPENWEATHER_TILE_BASE + "/precipitation_new/{z}/{x}/{y}.png?appid=" + key, common),
+      wind: L.tileLayer(OPENWEATHER_TILE_BASE + "/wind_new/{z}/{x}/{y}.png?appid=" + key, common),
+      temperature: L.tileLayer(OPENWEATHER_TILE_BASE + "/temp_new/{z}/{x}/{y}.png?appid=" + key, common)
+    };
+  }
+
+  function switchWeatherLayer(mapInstance, state, mode) {
+    if (!mapInstance || !state || !state.layers) return;
+    if (state.active && mapInstance.hasLayer(state.active)) {
+      mapInstance.removeLayer(state.active);
+    }
+    var layer = state.layers[mode];
+    if (!layer) return;
+    layer.addTo(mapInstance);
+    state.active = layer;
+    state.mode = mode;
+  }
+
+  function setupWeatherModeControls(containerId, mapInstance, state) {
+    var root = document.getElementById(containerId);
+    if (!root) return;
+    var buttons = root.querySelectorAll("[data-mode]");
+
+    function setActiveButton(mode) {
+      buttons.forEach(function (btn) {
+        var m = btn.getAttribute("data-mode");
+        if (m === mode) btn.classList.add("active");
+        else btn.classList.remove("active");
+      });
+    }
+
+    if (!state || !state.layers) {
+      root.classList.add("disabled");
+    }
+
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var mode = btn.getAttribute("data-mode");
+        if (!state || !state.layers) return;
+        switchWeatherLayer(mapInstance, state, mode);
+        setActiveButton(mode);
+      });
+    });
+
+    if (state && state.layers) {
+      var initial = state.mode || "temperature";
+      switchWeatherLayer(mapInstance, state, initial);
+      setActiveButton(initial);
+    }
+  }
   function fetchCurrentTemp(lat, lon) {
     return fetch(OPEN_METEO + "?" + new URLSearchParams({
       latitude: lat,
@@ -99,6 +160,16 @@
     }).addTo(map);
 
     map.attributionControl.setPrefix("\uD83C\uDDF7\uD83C\uDDFA ");
+
+    if (OPENWEATHER_TILE_KEY) {
+      mapWeatherState = {
+        layers: createWeatherTileLayersForMap(),
+        active: null,
+        mode: "temperature"
+      };
+    } else {
+      mapWeatherState = null;
+    }
 
     var weatherUrlBase = getBaseUrl().replace(/\/map_app\/?$/, "/") + "weather_app/index.html#/city/";
 
@@ -175,6 +246,8 @@
       return (c.name_ru && c.name_ru.toLowerCase().indexOf(norm) !== -1) ||
         (c.slug && c.slug.toLowerCase().indexOf(norm.replace(/\s+/g, "_")) !== -1);
     });
+
+    setupWeatherModeControls("mapModes", map, mapWeatherState);
   }
 
   function setupMapSearch() {

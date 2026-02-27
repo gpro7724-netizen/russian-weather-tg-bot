@@ -7,7 +7,13 @@
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <!-- Ссылка на бота в Telegram (можно заменить на своего бота) -->
-  <script>window.TELEGRAM_BOT_URL = "https://t.me/Russianweather1_bot";</script>
+  <script>
+    window.TELEGRAM_BOT_URL = "https://t.me/Russianweather1_bot";
+    // Ключ OpenWeatherMap для погодных слоёв (осадки / ветер / температура) на карте.
+    // Зарегистрируйтесь на https://openweathermap.org/, создайте API‑ключ и вставьте сюда.
+    // Без этого ключа режимы «Осадки» и «Ветер» будут недоступны, карта покажет только подложку.
+    window.OPENWEATHER_TILE_KEY = window.OPENWEATHER_TILE_KEY || "";
+  </script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -185,6 +191,38 @@
       background: none !important;
       border: none !important;
     }
+    .map-modes {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin: 8px 12px;
+      margin-bottom: 10px;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+    }
+    .map-mode-btn {
+      border: 1px solid #d1d5db;
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: #f3f4f6;
+      color: #111827;
+      cursor: pointer;
+      font-size: 0.8rem;
+      line-height: 1.2;
+      white-space: nowrap;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+    }
+    .map-mode-btn.active {
+      background: #0ea5e9;
+      border-color: #0ea5e9;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .map-modes.disabled .map-mode-btn {
+      opacity: 0.35;
+      cursor: default;
+      transform: none;
+    }
   </style>
 </head>
 <body>
@@ -205,6 +243,11 @@
     </div>
     <span>нажмите по городу — откроется погода</span>
   </header>
+  <div class="map-modes" id="mapModes">
+    <button type="button" class="map-mode-btn" data-mode="precipitation">Осадки</button>
+    <button type="button" class="map-mode-btn" data-mode="wind">Ветер</button>
+    <button type="button" class="map-mode-btn active" data-mode="temperature">Температура</button>
+  </div>
   <div id="map"></div>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>

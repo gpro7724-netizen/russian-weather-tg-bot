@@ -8,10 +8,15 @@
 
   // Ключ WeatherAPI.com прокидывается из index.html через window.WEATHER_API_KEY.
   const WEATHER_API_KEY = (window.WEATHER_API_KEY || "").trim();
+  // Ключ OpenWeatherMap для тайл‑слоёв погоды (осадки / ветер / температура) на карте.
+  const OPENWEATHER_TILE_KEY = (window.OPENWEATHER_TILE_KEY || "").trim();
+  const OPENWEATHER_TILE_BASE = "https://tile.openweathermap.org/map";
 
   var tg = null;
   var mapLanding = null;
   var mapCity = null;
+  var mapLandingWeather = null;
+  var mapCityWeather = null;
   var TELEGRAM_BOT_URL = window.TELEGRAM_BOT_URL || "https://t.me/Russianweather1_bot";
 
   let cities = [];
@@ -106,6 +111,65 @@
       });
     }
     return attempt(0);
+  }
+
+  function createWeatherTileLayers() {
+    if (!OPENWEATHER_TILE_KEY) return null;
+    var key = OPENWEATHER_TILE_KEY;
+    var common = {
+      attribution: "&copy; OpenWeatherMap",
+      opacity: 0.6
+    };
+    return {
+      precipitation: L.tileLayer(OPENWEATHER_TILE_BASE + "/precipitation_new/{z}/{x}/{y}.png?appid=" + key, common),
+      wind: L.tileLayer(OPENWEATHER_TILE_BASE + "/wind_new/{z}/{x}/{y}.png?appid=" + key, common),
+      temperature: L.tileLayer(OPENWEATHER_TILE_BASE + "/temp_new/{z}/{x}/{y}.png?appid=" + key, common)
+    };
+  }
+
+  function switchWeatherLayer(mapInstance, state, mode) {
+    if (!mapInstance || !state || !state.layers) return;
+    if (state.active && mapInstance.hasLayer(state.active)) {
+      mapInstance.removeLayer(state.active);
+    }
+    var layer = state.layers[mode];
+    if (!layer) return;
+    layer.addTo(mapInstance);
+    state.active = layer;
+    state.mode = mode;
+  }
+
+  function setupWeatherModeControls(containerId, mapInstance, state) {
+    var root = document.getElementById(containerId);
+    if (!root) return;
+    var buttons = root.querySelectorAll("[data-mode]");
+
+    function setActiveButton(mode) {
+      buttons.forEach(function (btn) {
+        var m = btn.getAttribute("data-mode");
+        if (m === mode) btn.classList.add("active");
+        else btn.classList.remove("active");
+      });
+    }
+
+    if (!state || !state.layers) {
+      root.classList.add("disabled");
+    }
+
+    buttons.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        var mode = btn.getAttribute("data-mode");
+        if (!state || !state.layers) return;
+        switchWeatherLayer(mapInstance, state, mode);
+        setActiveButton(mode);
+      });
+    });
+
+    if (state && state.layers) {
+      var initialMode = state.mode || "temperature";
+      switchWeatherLayer(mapInstance, state, initialMode);
+      setActiveButton(initialMode);
+    }
   }
 
   function fetchWeather(lat, lon, timezone) {
@@ -222,6 +286,7 @@
       mapLanding.remove();
       mapLanding = null;
     }
+    mapLandingWeather = null;
   }
 
   function destroyCityMap() {
@@ -229,6 +294,7 @@
       mapCity.remove();
       mapCity = null;
     }
+    mapCityWeather = null;
   }
 
   function initLandingMap() {
@@ -246,6 +312,16 @@
     }).addTo(mapLanding);
     mapLanding.attributionControl.setPrefix("\u{1F1F7}\u{1F1FA} ");
     mapLanding.setMaxBounds(L.latLngBounds([41, 19], [82, 180]));
+
+    if (OPENWEATHER_TILE_KEY) {
+      mapLandingWeather = {
+        layers: createWeatherTileLayers(),
+        active: null,
+        mode: "temperature"
+      };
+    } else {
+      mapLandingWeather = null;
+    }
     cities.forEach(function (c) {
       var tempStr = "—°";
       var icon = L.divIcon({
@@ -275,6 +351,8 @@
           "<div class=\"popup-actions\"><a href=\"" + weatherUrl + "\">Погода</a></div>");
       });
     });
+
+    setupWeatherModeControls("landingMapModes", mapLanding, mapLandingWeather);
   }
 
   function initCityMap(city) {
@@ -292,6 +370,16 @@
     }).addTo(mapCity);
     mapCity.attributionControl.setPrefix("\u{1F1F7}\u{1F1FA} ");
     mapCity.setMaxBounds(L.latLngBounds([41, 19], [82, 180]));
+
+    if (OPENWEATHER_TILE_KEY) {
+      mapCityWeather = {
+        layers: createWeatherTileLayers(),
+        active: null,
+        mode: "temperature"
+      };
+    } else {
+      mapCityWeather = null;
+    }
     L.circleMarker([city.lat, city.lon], {
       radius: 14,
       color: "#e74c3c",
@@ -299,6 +387,8 @@
       fillColor: "#ff6b4a",
       fillOpacity: 0.95
     }).bindPopup("<div class=\"popup-title\">" + escapeHtml(city.name_ru) + "</div>").addTo(mapCity);
+
+    setupWeatherModeControls("cityMapModes", mapCity, mapCityWeather);
   }
 
   function renderHome() {
@@ -312,12 +402,18 @@
       "<svg viewBox=\"0 0 40 40\" fill=\"none\"><path d=\"M20 4C11.16 4 4 11.16 4 20s7.16 16 16 16 16-7.16 16-16S28.84 4 20 4z\" fill=\"#0ea5e9\" opacity=\"0.2\"/><path d=\"M20 8c-6.63 0-12 5.37-12 12s5.37 12 12 12 12-5.37 12-12S26.63 8 20 8z\" fill=\"#0ea5e9\"/><circle cx=\"20\" cy=\"16\" r=\"4\" fill=\"#fbbf24\"/><path d=\"M14 24c0-3.31 2.69-6 6-6s6 2.69 6 6\" stroke=\"#94a3b8\" stroke-width=\"1.5\" fill=\"none\"/><ellipse cx=\"20\" cy=\"28\" rx=\"6\" ry=\"2\" fill=\"#94a3b8\" opacity=\"0.6\"/></svg>" +
       "<span>Погода России</span></a>" +
       "<div class=\"hero\">Погода по городам России</div>" +
-      "<p class=\"desc\">Мы бот, который упрощает поиск погоды. Выберите город на карте или в списке — на карте видна температура, карту можно двигать и масштабировать.</p>" +
+      "<p class=\"desc\">Мы бот, который упрощает поиск погоды. Выберите город на карте или в списке — на карте видна температура, карту можно двигать и масштабировать. В режимах Осадки и Ветер появляется погодный слой поверх карты.</p>" +
       "<div class=\"search-wrap\">" +
       "<input type=\"text\" id=\"landingSearch\" class=\"search-input\" placeholder=\"Поиск города...\" autocomplete=\"off\">" +
       "<button type=\"button\" id=\"landingSearchBtn\" class=\"search-btn\" aria-label=\"Найти город\">\u{1F50D}</button>" +
       "</div>" +
-      "<div class=\"map-section\"><h3>Карта России</h3><div class=\"map-wrap map-landing\" id=\"landingMap\"></div></div>" +
+      "<div class=\"map-section\"><h3>Карта России</h3>" +
+      "<div class=\"map-modes\" id=\"landingMapModes\">" +
+      "<button type=\"button\" class=\"map-mode-btn\" data-mode=\"precipitation\">Осадки</button>" +
+      "<button type=\"button\" class=\"map-mode-btn\" data-mode=\"wind\">Ветер</button>" +
+      "<button type=\"button\" class=\"map-mode-btn active\" data-mode=\"temperature\">Температура</button>" +
+      "</div>" +
+      "<div class=\"map-wrap map-landing\" id=\"landingMap\"></div></div>" +
       "<a href=\"#/cities\" class=\"btn-city\">Выбрать город</a>";
     fragment.appendChild(landing);
     document.getElementById("app").innerHTML = "";
@@ -542,7 +638,12 @@
     mapSection.className = "map-section";
     mapSection.innerHTML =
       "<h3>На карте России</h3>" +
-      "<p class=\"desc\" style=\"margin-bottom:8px;font-size:0.9rem;\">Карту можно двигать, приближать и отдалять.</p>" +
+      "<p class=\"desc\" style=\"margin-bottom:8px;font-size:0.9rem;\">Карту можно двигать, приближать и отдалять. Режимы Осадки / Ветер / Температура включают погодные слои поверх карты.</p>" +
+      "<div class=\"map-modes\" id=\"cityMapModes\">" +
+      "<button type=\"button\" class=\"map-mode-btn\" data-mode=\"precipitation\">Осадки</button>" +
+      "<button type=\"button\" class=\"map-mode-btn\" data-mode=\"wind\">Ветер</button>" +
+      "<button type=\"button\" class=\"map-mode-btn active\" data-mode=\"temperature\">Температура</button>" +
+      "</div>" +
       "<div class=\"map-wrap\" id=\"cityMap\"></div>";
     fragment.appendChild(mapSection);
 

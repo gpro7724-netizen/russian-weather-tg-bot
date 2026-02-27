@@ -10,6 +10,10 @@
     // Ключ WeatherAPI.com для мини‑приложения.
     // ВАЖНО: при прямом размещении ключа в этом файле он будет виден в браузере.
     window.WEATHER_API_KEY = "da74e01a074f45be83a190851262702";
+    // Ключ OpenWeatherMap для погодных слоёв (осадки / ветер / температура) на карте.
+    // Зарегистрируйтесь на https://openweathermap.org/, создайте API‑ключ и вставьте сюда.
+    // Без этого ключа режимы «Осадки» и «Ветер» будут недоступны, карта покажет только подложку.
+    window.OPENWEATHER_TILE_KEY = window.OPENWEATHER_TILE_KEY || "";
   </script>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -285,6 +289,39 @@
     .day-forecast .temp { color: var(--accent, #87ceeb); }
     .map-section { margin-top: 20px; }
     .map-section h3 { font-size: 0.95rem; color: #aaa; margin-bottom: 8px; }
+    .map-modes {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+    }
+    .map-mode-btn {
+      border: none;
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: rgba(15,23,42,0.75);
+      color: #e5e7eb;
+      cursor: pointer;
+      font-size: 0.8rem;
+      line-height: 1.2;
+      white-space: nowrap;
+      transition: background 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+    }
+    .map-mode-btn span {
+      opacity: 0.9;
+    }
+    .map-mode-btn.active {
+      background: #0ea5e9;
+      color: #fff;
+      transform: translateY(-1px);
+    }
+    .map-modes.disabled .map-mode-btn {
+      opacity: 0.35;
+      cursor: default;
+      transform: none;
+    }
     .map-wrap {
       position: relative;
       width: 100%;
