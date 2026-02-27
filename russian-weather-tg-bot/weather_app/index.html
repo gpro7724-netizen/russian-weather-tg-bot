@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#1a1a2e">
   <title>Погода по городам России</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -151,11 +152,13 @@
       position: relative;
       width: 100%;
       max-width: 100%;
+      height: 260px;
       border-radius: 12px;
       overflow: hidden;
       background: rgba(0,0,0,0.2);
     }
-    .map-wrap img { width: 100%; height: auto; display: block; vertical-align: top; }
+    .map-wrap img { width: 100%; height: 100%; display: block; object-fit: cover; vertical-align: top; }
+    .map-wrap .leaflet-container { width: 100%; height: 100%; }
     .map-marker {
       position: absolute;
       width: 24px;
@@ -180,6 +183,7 @@
   <div id="app">
     <div class="loading">Загрузка...</div>
   </div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
