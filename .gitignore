@@ -24,6 +24,6 @@ node_modules/
 Thumbs.db
 *.log
 
-# Игнор из подпапки бота (опционально — раскомментируйте, если не хотите пушить тяжёлые ассеты)
+# Ассеты бота (опционально — раскомментируйте, если не хотите пушить тяжёлые PNG)
 # russian-weather-tg-bot/assets/*.png
 # !russian-weather-tg-bot/assets/.gitkeep
