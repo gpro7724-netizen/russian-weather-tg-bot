@@ -250,8 +250,8 @@
       text-align: center;
       animation: cardFadeIn 0.4s ease;
     }
-    .current-weather .temp-main { font-size: 2.5rem; font-weight: 300; }
-    .current-weather .desc { color: #aaa; margin-top: 4px; }
+    .current-weather .temp-main { font-size: 2.5rem; font-weight: 600; color: #111827; }
+    .current-weather .desc { color: #374151; margin-top: 4px; font-weight: 500; }
     .current-weather .details {
       display: flex;
       flex-wrap: wrap;
@@ -259,7 +259,8 @@
       gap: 16px;
       margin-top: 16px;
       font-size: 0.9rem;
-      color: #bbb;
+      color: #1f2937;
+      font-weight: 500;
     }
     .today-parts {
       background: rgba(255,255,255,0.06);
@@ -267,12 +268,13 @@
       padding: 14px 16px;
       margin: 10px 0 14px;
       font-size: 0.9rem;
+      color: #1f2937;
     }
     .today-parts strong {
       display: block;
       margin-bottom: 8px;
       font-weight: 600;
-      color: #e5e7eb;
+      color: #111827;
     }
     .day-parts-list {
       display: flex;
@@ -285,11 +287,13 @@
       gap: 8px;
     }
     .day-part-row .label {
-      color: #9ca3af;
+      color: #4b5563;
+      font-weight: 500;
     }
     .day-part-row .value {
-      color: #e5e7eb;
+      color: #111827;
       text-align: right;
+      font-weight: 500;
     }
     .current-weather .retry-btn {
       margin-top: 14px;
@@ -310,6 +314,10 @@
       border-radius: 12px;
       padding: 14px;
       margin-bottom: 10px;
+      color: #1f2937;
+    }
+    .day-forecast strong {
+      color: #111827;
     }
     .week-calendar {
       display: flex;
@@ -322,10 +330,11 @@
       flex: 0 0 auto;
       padding: 6px 10px;
       border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.2);
-      background: transparent;
-      color: var(--text, #eee);
-      font-size: 0.8rem;
+      border: 1px solid #9ca3af;
+      background: #f3f4f6;
+      color: #1f2937;
+      font-size: 0.85rem;
+      font-weight: 500;
       cursor: pointer;
     }
     .week-day-btn.active {
@@ -336,6 +345,7 @@
     .week-day-details {
       font-size: 0.85rem;
       margin-top: 4px;
+      color: #1f2937;
     }
     .map-section { margin-top: 20px; }
     .map-section h3 { font-size: 0.95rem; color: #aaa; margin-bottom: 8px; }
@@ -443,13 +453,14 @@
     }
     .landing-bg-slide {
       position: absolute;
-      inset: -4%;
+      inset: -6%;
       background-size: cover;
       background-position: center center;
-      filter: blur(10px) saturate(1.15) brightness(0.9);
-      transform: scale(1.06);
+      /* Без блюра — фон чёткий и заметный */
+      filter: saturate(1.15) brightness(1.02);
+      transform: scale(1.02);
       opacity: 0;
-      transition: opacity 1.6s ease-in-out;
+      transition: opacity 1.2s ease-in-out;
     }
     .landing-bg-slide.active {
       opacity: 1;
@@ -457,9 +468,10 @@
     .landing-bg-gradient {
       position: absolute;
       inset: 0;
+      /* Лёгкий градиент, чтобы текст читался, но фото было видно */
       background:
-        radial-gradient(circle at top, rgba(255,255,255,0.92) 0, rgba(255,255,255,0.65) 30%, transparent 55%),
-        linear-gradient(to bottom, rgba(26,26,46,0.5), rgba(26,26,46,0.96));
+        radial-gradient(circle at top, rgba(255,255,255,0.5) 0, rgba(255,255,255,0.2) 40%, transparent 70%),
+        linear-gradient(to bottom, rgba(26,26,46,0.25), rgba(26,26,46,0.75));
       mix-blend-mode: normal;
     }
     @supports (padding: max(0px)) {
