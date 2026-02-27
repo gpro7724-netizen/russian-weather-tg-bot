@@ -168,8 +168,8 @@
       var icon = L.divIcon({
         className: "city-marker-div",
         html: makeMarkerHtml(c.name_ru, tempStr),
-        iconSize: [80, 44],
-        iconAnchor: [40, 42]
+        iconSize: [110, 58],
+        iconAnchor: [55, 56]
       });
       var m = L.marker([c.lat, c.lon], { icon: icon });
       var weatherUrl = "#/city/" + encodeURIComponent(c.slug);
@@ -183,8 +183,8 @@
         m.setIcon(L.divIcon({
           className: "city-marker-div",
           html: makeMarkerHtml(c.name_ru, str),
-          iconSize: [80, 44],
-          iconAnchor: [40, 42]
+          iconSize: [110, 58],
+          iconAnchor: [55, 56]
         }));
         var newTempText = (t != null ? (t > 0 ? "+" : "") + t + " °C" : "—");
         m.setPopupContent("<div class=\"popup-title\">" + escapeHtml(c.name_ru) + "</div>" +
@@ -210,7 +210,7 @@
     mapCity.attributionControl.setPrefix("\u{1F1F7}\u{1F1FA} ");
     mapCity.setMaxBounds(L.latLngBounds([41, 19], [82, 180]));
     L.circleMarker([city.lat, city.lon], {
-      radius: 8,
+      radius: 14,
       color: "#e74c3c",
       weight: 2,
       fillColor: "#ff6b4a",

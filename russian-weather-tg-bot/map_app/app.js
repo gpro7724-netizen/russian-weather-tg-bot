@@ -78,8 +78,8 @@
       var icon = L.divIcon({
         className: "city-marker-div",
         html: makeMarkerHtml(c.name_ru, tempStr),
-        iconSize: [80, 44],
-        iconAnchor: [40, 42]
+        iconSize: [110, 58],
+        iconAnchor: [55, 56]
       });
 
       var m = L.marker([c.lat, c.lon], { icon: icon });
@@ -98,8 +98,8 @@
         m.setIcon(L.divIcon({
           className: "city-marker-div",
           html: makeMarkerHtml(c.name_ru, str),
-          iconSize: [80, 44],
-          iconAnchor: [40, 42]
+          iconSize: [110, 58],
+          iconAnchor: [55, 56]
         }));
         var newTempText = (t != null ? (t > 0 ? "+" : "") + t + " °C" : "—");
         var newPopupHtml =

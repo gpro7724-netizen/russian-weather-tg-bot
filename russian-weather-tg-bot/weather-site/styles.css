@@ -213,37 +213,37 @@ body {
 
 .city-marker-wrap .city-marker-temp {
   display: inline-block;
-  font-size: 11px;
+  font-size: 15px;
   font-weight: 700;
   color: #fff;
   background: var(--accent);
-  padding: 2px 5px;
-  border-radius: 6px;
+  padding: 4px 8px;
+  border-radius: 8px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.2);
-  margin-bottom: 2px;
+  margin-bottom: 3px;
   font-family: var(--font-mono);
 }
 
 .city-marker-wrap .city-marker-name {
   display: inline-block;
-  font-size: 10px;
+  font-size: 13px;
   color: var(--text);
   background: var(--bg-card);
-  padding: 1px 4px;
-  border-radius: 4px;
+  padding: 3px 6px;
+  border-radius: 6px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.2);
-  max-width: 90px;
+  max-width: 110px;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .city-marker-wrap .city-marker-dot {
-  width: 8px;
-  height: 8px;
+  width: 14px;
+  height: 14px;
   background: var(--accent);
   border: 2px solid var(--bg-card);
   border-radius: 50%;
-  margin: 2px auto 0;
+  margin: 4px auto 0;
   box-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
 
