@@ -23,6 +23,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Inject OpenWeather tile key into HTML (if secret is set)
+        env:
+          OPENWEATHER_TILE_KEY: ${{ secrets.OPENWEATHER_TILE_KEY }}
+        run: |
+          if [ -n "$OPENWEATHER_TILE_KEY" ]; then
+            sed -i "s/window.OPENWEATHER_TILE_KEY = window.OPENWEATHER_TILE_KEY || \"\";/window.OPENWEATHER_TILE_KEY = \"$OPENWEATHER_TILE_KEY\";/" russian-weather-tg-bot/weather_app/index.html
+            sed -i "s/window.OPENWEATHER_TILE_KEY = window.OPENWEATHER_TILE_KEY || \"\";/window.OPENWEATHER_TILE_KEY = \"$OPENWEATHER_TILE_KEY\";/" russian-weather-tg-bot/map_app/index.html
+          else
+            echo "OPENWEATHER_TILE_KEY secret is not set, weather overlay modes will be disabled."
+          fi
+
       - name: Setup Pages
         uses: actions/configure-pages@v4
 
