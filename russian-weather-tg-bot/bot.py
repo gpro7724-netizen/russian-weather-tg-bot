@@ -558,6 +558,41 @@ CITY_RSS_FEEDS: Dict[str, List[str]] = {
     "orenburg": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://56.ru/rss/"],
     "novokuznetsk": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://kemerovo.rbc.ru/rss/"],
     "ryazan": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://62info.ru/rss/", "https://ryazan.rbc.ru/rss/"],
+    # Города 200k+: федеральные ленты + региональные где есть
+    "penza": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://penza.rbc.ru/rss/", "https://pnz.aif.ru/rss/"],
+    "astrakhan": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://astrakhan.rbc.ru/rss/"],
+    "ulan_ude": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://buryatia.rbc.ru/rss/"],
+    "surgut": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://surgut.rbc.ru/rss/", "https://ugra.aif.ru/rss/"],
+    "yakutsk": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://yakutia.rbc.ru/rss/"],
+    "vladimir": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://vladimir.rbc.ru/rss/", "https://vl.aif.ru/rss/"],
+    "belgorod": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://belgorod.rbc.ru/rss/", "https://bel.aif.ru/rss/"],
+    "nizhny_tagil": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://uralpolit.ru/rss", "https://ntagil.rbc.ru/rss/"],
+    "chita": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://chita.rbc.ru/rss/"],
+    "podolsk": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://riamo.ru/rss/"],
+    "saransk": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://mordovia.rbc.ru/rss/", "https://mordoviya.aif.ru/rss/"],
+    "vologda": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://vologda.rbc.ru/rss/", "https://vo.aif.ru/rss/"],
+    "kurgan": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://kurgan.rbc.ru/rss/"],
+    "cherepovets": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://vologda.rbc.ru/rss/"],
+    "oryol": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://orel.rbc.ru/rss/", "https://orel.aif.ru/rss/"],
+    "nizhnevartovsk": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://surgut.rbc.ru/rss/"],
+    "yoshkar_ola": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://mariel.rbc.ru/rss/"],
+    "murmansk": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://murmansk.rbc.ru/rss/", "https://murman.aif.ru/rss/"],
+    "novorossiysk": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://krasnodar.rbc.ru/rss/", "https://yugopolis.ru/rss/"],
+    "khimki": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://riamo.ru/rss/"],
+    "mytishchi": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://riamo.ru/rss/"],
+    "nalchik": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://kavkaz.versia.ru/rss/index.xml"],
+    "nizhnekamsk": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://rt.rbc.ru/rss/"],
+    "blagoveshchensk": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://amur.aif.ru/rss/"],
+    "korolyov": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://riamo.ru/rss/"],
+    "shakhty": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://rostov.rbc.ru/rss/", "https://161.ru/rss/"],
+    "engels": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://saratov.rbc.ru/rss/", "https://www.sarbc.ru/rss/"],
+    "veliky_novgorod": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://novgorod.rbc.ru/rss/", "https://vn.aif.ru/rss/"],
+    "lyubertsy": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://riamo.ru/rss/"],
+    "bratsk": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://irkutsk.rbc.ru/rss/"],
+    "stary_oskol": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://belgorod.rbc.ru/rss/"],
+    "angarsk": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://irkutsk.rbc.ru/rss/"],
+    "syktyvkar": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://komi.rbc.ru/rss/"],
+    "dzerzhinsk": ["https://ria.ru/export/rss2/index.xml", "https://tass.ru/rss/v2.xml", "https://www.interfax.ru/rss.asp", "https://lenta.ru/rss/news/russia", "https://nn.rbc.ru/rss/", "https://vremyan.ru/rss/"],
 }
 
 # Локальная карта России при приветствии (шаблон из проекта)
@@ -1366,6 +1401,7 @@ async def reminder_job(context: ContextTypes.DEFAULT_TYPE) -> None:
     """Раз в минуту проверяет местное время каждого подписчика и отправляет рассылку."""
     to_send = get_reminders_to_send_now()
     for chat_id, city_slug in to_send:
+        chat_id = int(chat_id)
         city = RUSSIAN_MILLION_PLUS_CITIES.get(city_slug)
         if not city:
             continue
@@ -1379,6 +1415,34 @@ async def reminder_job(context: ContextTypes.DEFAULT_TYPE) -> None:
             logger.info("Reminder sent chat_id=%s city_slug=%s", chat_id, city_slug)
         except Exception as e:
             logger.warning("Reminder send to %s for %s: %s", chat_id, city_slug, e)
+
+
+async def reminder_loop_fallback(application) -> None:
+    """Резервный цикл напоминаний, если job_queue недоступен (нет python-telegram-bot[job-queue])."""
+    await asyncio.sleep(10)
+    while True:
+        try:
+            to_send = get_reminders_to_send_now()
+            for chat_id, city_slug in to_send:
+                chat_id = int(chat_id)
+                city = RUSSIAN_MILLION_PLUS_CITIES.get(city_slug)
+                if not city:
+                    continue
+                try:
+                    text = await get_daily_weather_forecast(city)
+                    await application.bot.send_message(
+                        chat_id=chat_id,
+                        text=text,
+                        parse_mode=ParseMode.MARKDOWN,
+                    )
+                    logger.info("Reminder (fallback) sent chat_id=%s city_slug=%s", chat_id, city_slug)
+                except Exception as e:
+                    logger.warning("Reminder fallback send to %s for %s: %s", chat_id, city_slug, e)
+        except asyncio.CancelledError:
+            raise
+        except Exception as e:
+            logger.warning("Reminder fallback loop: %s", e)
+        await asyncio.sleep(60)
 
 
 # RSS-ленты: много источников — больше новостей и выше шанс найти по каждому городу.
@@ -2891,6 +2955,12 @@ async def post_init_set_commands(application) -> None:
         logger.info("Кнопка меню установлена (MenuButtonCommands).")
     except Exception as e:
         logger.warning("set_chat_menu_button: %s", e, exc_info=True)
+
+    subs = _load_subscriptions()
+    logger.info("Напоминания: файл %s, подписок: %s", SUBSCRIPTIONS_FILE, len(subs))
+    if application.job_queue is None:
+        asyncio.create_task(reminder_loop_fallback(application))
+        logger.info("Напоминания о погоде: включён резервный цикл (job_queue недоступен).")
 
 
 def main() -> None:

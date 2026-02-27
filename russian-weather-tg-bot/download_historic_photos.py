@@ -17,6 +17,14 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bot import RUSSIAN_MILLION_PLUS_CITIES, _script_dir
 
 ASSETS = os.path.join(_script_dir, "assets")
+# Скачивать только для этих городов (200k+), остальные уже есть
+DOWNLOAD_ONLY_SLUGS = {
+    "penza", "astrakhan", "ulan_ude", "surgut", "yakutsk", "vladimir", "belgorod", "nizhny_tagil",
+    "chita", "podolsk", "saransk", "vologda", "kurgan", "cherepovets", "oryol", "nizhnevartovsk",
+    "yoshkar_ola", "murmansk", "novorossiysk", "khimki", "mytishchi", "nalchik", "nizhnekamsk",
+    "blagoveshchensk", "korolyov", "shakhty", "engels", "veliky_novgorod", "lyubertsy", "bratsk",
+    "stary_oskol", "angarsk", "syktyvkar", "dzerzhinsk",
+}
 WIKI_API = "https://en.wikipedia.org/w/api.php"
 COMMONS_API = "https://commons.wikimedia.org/w/api.php"
 THUMB_SIZE = 800
@@ -57,6 +65,41 @@ FALLBACK_FILES = {
     "orenburg": "Orenburg_caravan_saray.jpg",
     "novokuznetsk": "Novokuznetsk_Transfiguration_Cathedral.jpg",
     "ryazan": "Ryazan_Kremlin.jpg",
+    # Города 200k+: исторический центр, достопримечательности
+    "penza": "Penza_Cathedral_2009.jpg",
+    "astrakhan": "Astrakhan_Kremlin_2.jpg",
+    "ulan_ude": "Ulan-Ude_centre.jpg",
+    "surgut": "Surgut_bridge.jpg",
+    "yakutsk": "Yakutsk_centre.jpg",
+    "vladimir": "Golden_Gate_Vladimir.jpg",
+    "belgorod": "Belgorod_cathedral.jpg",
+    "nizhny_tagil": "Nizhny_Tagil_centre.jpg",
+    "chita": "Chita_Transfiguration_Cathedral.jpg",
+    "podolsk": "Podolsk_Cathedral.jpg",
+    "saransk": "Saransk_cathedral.jpg",
+    "vologda": "Vologda_Kremlin.jpg",
+    "kurgan": "Kurgan_centre.jpg",
+    "cherepovets": "Cherepovets_Resurrection_Cathedral.jpg",
+    "oryol": "Oryol_centre.jpg",
+    "nizhnevartovsk": "Nizhnevartovsk_centre.jpg",
+    "yoshkar_ola": "Yoshkar-Ola_centre.jpg",
+    "murmansk": "Murmansk_Aloysius_Cathedral.jpg",
+    "novorossiysk": "Novorossiysk_embankment.jpg",
+    "khimki": "Khimki_centre.jpg",
+    "mytishchi": "Mytishchi_centre.jpg",
+    "nalchik": "Nalchik_centre.jpg",
+    "nizhnekamsk": "Nizhnekamsk_mosque.jpg",
+    "blagoveshchensk": "Blagoveshchensk_embankment.jpg",
+    "korolyov": "Korolyov_centre.jpg",
+    "shakhty": "Shakhty_centre.jpg",
+    "engels": "Engels_Volga.jpg",
+    "veliky_novgorod": "Saint_Sophia_Cathedral_in_Novgorod.jpg",
+    "lyubertsy": "Lyubertsy_centre.jpg",
+    "bratsk": "Bratsk_Angara.jpg",
+    "stary_oskol": "Stary_Oskol_centre.jpg",
+    "angarsk": "Angarsk_centre.jpg",
+    "syktyvkar": "Syktyvkar_Stefan_cathedral.jpg",
+    "dzerzhinsk": "Dzerzhinsk_Nizhny_Novgorod_oblast.jpg",
 }
 
 
@@ -126,6 +169,8 @@ def main():
     os.makedirs(ASSETS, exist_ok=True)
     ok = 0
     for slug, city in RUSSIAN_MILLION_PLUS_CITIES.items():
+        if DOWNLOAD_ONLY_SLUGS and slug not in DOWNLOAD_ONLY_SLUGS:
+            continue
         time.sleep(0.3)
         path = os.path.join(ASSETS, f"historic_{slug}.png")
         url = _get_wiki_image_url(city.name_en)

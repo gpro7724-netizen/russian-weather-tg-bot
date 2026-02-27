@@ -29,7 +29,7 @@
 
   function loadCities() {
     var base = getBaseUrl();
-    var url = base + "cities.json";
+    var url = base + "../weather_app/cities.json";
     return fetch(url).then(function (r) {
       if (!r.ok) throw new Error("Не удалось загрузить список городов");
       return r.json();
