@@ -93,6 +93,16 @@
     return map[code] || "Облачно";
   }
 
+  function formatDayLabel(d) {
+    if (!d || !(d instanceof Date)) return "";
+    var day = d.getDate();
+    var month = d.getMonth() + 1;
+    var year = d.getFullYear();
+    var dd = (day < 10 ? "0" : "") + day;
+    var mm = (month < 10 ? "0" : "") + month;
+    return dd + "." + mm + "." + year;
+  }
+
   function escapeHtml(s) {
     var div = document.createElement("div");
     div.textContent = s;
@@ -430,7 +440,7 @@
         var maxDays = Math.min(times.length, 7);
         for (var i = 0; i < maxDays; i++) {
           var d = new Date(times[i]);
-          var dayLabel = i === 0 ? "Сегодня" : (i === 1 ? "Завтра" : (d.getDate() + "." + (d.getMonth() + 1)));
+          var dayLabel = i === 0 ? "Сегодня" : (i === 1 ? "Завтра" : formatDayLabel(d));
           forecastHtml += "<button type=\"button\" class=\"week-day-btn\" data-day-index=\"" + i + "\">" + escapeHtml(dayLabel) + "</button>";
         }
         forecastHtml += "</div><div class=\"week-day-details\"></div>";

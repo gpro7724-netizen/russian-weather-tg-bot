@@ -90,6 +90,28 @@
     return getBaseUrl() + "assets/";
   }
 
+  function formatDayLabel(d) {
+    if (!d || !(d instanceof Date)) return "";
+    var day = d.getDate();
+    var month = d.getMonth() + 1;
+    var year = d.getFullYear();
+    var dd = (day < 10 ? "0" : "") + day;
+    var mm = (month < 10 ? "0" : "") + month;
+    return dd + "." + mm + "." + year;
+  }
+
+  /** Парсит строку даты YYYY-MM-DD как локальную календарную дату (без сдвига по времени). */
+  function parseForecastDate(dateStr) {
+    if (!dateStr || typeof dateStr !== "string") return null;
+    var parts = dateStr.split("-");
+    if (parts.length !== 3) return null;
+    var y = parseInt(parts[0], 10);
+    var m = parseInt(parts[1], 10) - 1;
+    var d = parseInt(parts[2], 10);
+    if (isNaN(y) || isNaN(m) || isNaN(d)) return null;
+    return new Date(y, m, d);
+  }
+
   function ensureLandingBackground() {
     if (!LANDING_BG_IMAGES || !LANDING_BG_IMAGES.length) return;
     if (!landingBgRoot) {
@@ -812,14 +834,14 @@
           for (var i = 0; i < maxDays; i++) {
             var day = days[i];
             var dateStr = day && day.date;
-            var d = dateStr ? new Date(dateStr) : null;
+            var d = dateStr ? parseForecastDate(dateStr) : null;
             var dayLabel;
             if (i === 0) {
               dayLabel = "Сегодня";
             } else if (i === 1) {
               dayLabel = "Завтра";
             } else if (d) {
-              dayLabel = d.getDate() + "." + (d.getMonth() + 1);
+              dayLabel = formatDayLabel(d);
             } else {
               dayLabel = "День " + (i + 1);
             }
