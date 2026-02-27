@@ -82,7 +82,7 @@ class City:
     search_keywords: tuple = ()
 
 
-# Все города РФ с населением 500 тыс.+ (по данным Росстата): название, координаты, ключевые слова для новостей
+# Все города РФ с населением 200 тыс.+ (по данным Росстата): название, координаты, ключевые слова для новостей
 RUSSIAN_MILLION_PLUS_CITIES: Dict[str, City] = {
     "moscow": City("moscow", "Москва", "Moscow", 55.7558, 37.6173, ("Московская область", "Подмосковье")),
     "spb": City("spb", "Санкт-Петербург", "Saint Petersburg", 59.9343, 30.3351, ("Ленинградская область", "Петербург")),
@@ -146,6 +146,41 @@ RUSSIAN_MILLION_PLUS_CITIES: Dict[str, City] = {
     "cheboksary": City("cheboksary", "Чебоксары", "Cheboksary", 56.1322, 47.2515, ("Чувашия",)),
     "kaluga": City("kaluga", "Калуга", "Kaluga", 54.5293, 36.2754, ("Калужская область",)),
     "smolensk": City("smolensk", "Смоленск", "Smolensk", 54.7826, 32.0453, ("Смоленская область",)),
+    # Города 200–500 тыс. (добавление по той же схеме)
+    "penza": City("penza", "Пенза", "Penza", 53.1959, 45.0000, ("Пензенская область",)),
+    "astrakhan": City("astrakhan", "Астрахань", "Astrakhan", 46.3497, 48.0408, ("Астраханская область",)),
+    "ulan_ude": City("ulan_ude", "Улан-Удэ", "Ulan-Ude", 51.8344, 107.5844, ("Бурятия", "Республика Бурятия")),
+    "surgut": City("surgut", "Сургут", "Surgut", 61.2500, 73.4167, ("Ханты-Мансийский автономный округ", "Югра")),
+    "yakutsk": City("yakutsk", "Якутск", "Yakutsk", 62.0355, 129.6755, ("Якутия", "Саха")),
+    "vladimir": City("vladimir", "Владимир", "Vladimir", 56.1296, 40.4065, ("Владимирская область",)),
+    "belgorod": City("belgorod", "Белгород", "Belgorod", 50.6107, 36.5802, ("Белгородская область",)),
+    "nizhny_tagil": City("nizhny_tagil", "Нижний Тагил", "Nizhny Tagil", 57.9194, 59.9650, ("Свердловская область",)),
+    "chita": City("chita", "Чита", "Chita", 52.0317, 113.5009, ("Забайкальский край",)),
+    "podolsk": City("podolsk", "Подольск", "Podolsk", 55.4319, 37.5458, ("Московская область", "Подмосковье")),
+    "saransk": City("saransk", "Саранск", "Saransk", 54.1833, 45.1742, ("Мордовия", "Мордовия республика")),
+    "vologda": City("vologda", "Вологда", "Vologda", 59.2239, 39.8833, ("Вологодская область",)),
+    "kurgan": City("kurgan", "Курган", "Kurgan", 55.4500, 65.3333, ("Курганская область",)),
+    "cherepovets": City("cherepovets", "Череповец", "Cherepovets", 59.1333, 37.9000, ("Вологодская область",)),
+    "oryol": City("oryol", "Орёл", "Oryol", 52.9651, 36.0705, ("Орловская область",)),
+    "nizhnevartovsk": City("nizhnevartovsk", "Нижневартовск", "Nizhnevartovsk", 60.9344, 76.5531, ("Ханты-Мансийский автономный округ", "Югра")),
+    "yoshkar_ola": City("yoshkar_ola", "Йошкар-Ола", "Yoshkar-Ola", 56.6388, 47.8908, ("Марий Эл", "Марийская")),
+    "murmansk": City("murmansk", "Мурманск", "Murmansk", 68.9667, 33.0833, ("Мурманская область",)),
+    "novorossiysk": City("novorossiysk", "Новороссийск", "Novorossiysk", 44.7235, 37.7685, ("Краснодарский край",)),
+    "khimki": City("khimki", "Химки", "Khimki", 55.8970, 37.4297, ("Московская область", "Подмосковье")),
+    "mytishchi": City("mytishchi", "Мытищи", "Mytishchi", 55.9116, 37.7308, ("Московская область", "Подмосковье")),
+    "nalchik": City("nalchik", "Нальчик", "Nalchik", 43.4853, 43.6071, ("Кабардино-Балкария", "Кабардино-Балкарская")),
+    "nizhnekamsk": City("nizhnekamsk", "Нижнекамск", "Nizhnekamsk", 55.6366, 51.8244, ("Татарстан",)),
+    "blagoveshchensk": City("blagoveshchensk", "Благовещенск", "Blagoveshchensk", 50.2796, 127.5405, ("Амурская область",)),
+    "korolyov": City("korolyov", "Королёв", "Korolyov", 55.9142, 37.8256, ("Московская область", "Подмосковье")),
+    "shakhty": City("shakhty", "Шахты", "Shakhty", 47.7091, 40.2144, ("Ростовская область",)),
+    "engels": City("engels", "Энгельс", "Engels", 51.4989, 46.1211, ("Саратовская область",)),
+    "veliky_novgorod": City("veliky_novgorod", "Великий Новгород", "Veliky Novgorod", 58.5213, 31.2710, ("Новгородская область",)),
+    "lyubertsy": City("lyubertsy", "Люберцы", "Lyubertsy", 55.6772, 37.8932, ("Московская область", "Подмосковье")),
+    "bratsk": City("bratsk", "Братск", "Bratsk", 56.1325, 101.6142, ("Иркутская область",)),
+    "stary_oskol": City("stary_oskol", "Старый Оскол", "Stary Oskol", 51.2967, 37.8417, ("Белгородская область",)),
+    "angarsk": City("angarsk", "Ангарск", "Angarsk", 52.5367, 103.8862, ("Иркутская область",)),
+    "syktyvkar": City("syktyvkar", "Сыктывкар", "Syktyvkar", 61.6764, 50.8099, ("Коми", "Республика Коми")),
+    "dzerzhinsk": City("dzerzhinsk", "Дзержинск", "Dzerzhinsk", 56.2389, 43.4631, ("Нижегородская область",)),
 }
 
 # 10 самых крупных по населению — только они в выпадающем списке; остальные через поиск (лупа)
@@ -193,6 +228,15 @@ CITY_TIMEZONES: Dict[str, str] = {
     "volzhsky": "Europe/Moscow", "taganrog": "Europe/Moscow", "sterlitamak": "Asia/Yekaterinburg",
     "komsomolsk_na_amure": "Asia/Vladivostok", "petrozavodsk": "Europe/Moscow", "lipetsk": "Europe/Moscow",
     "arhangelsk": "Europe/Moscow", "cheboksary": "Europe/Moscow", "kaluga": "Europe/Moscow", "smolensk": "Europe/Moscow",
+    "penza": "Europe/Moscow", "astrakhan": "Europe/Moscow", "ulan_ude": "Asia/Irkutsk", "surgut": "Asia/Yekaterinburg",
+    "yakutsk": "Asia/Yakutsk", "vladimir": "Europe/Moscow", "belgorod": "Europe/Moscow", "nizhny_tagil": "Asia/Yekaterinburg",
+    "chita": "Asia/Chita", "podolsk": "Europe/Moscow", "saransk": "Europe/Moscow", "vologda": "Europe/Moscow",
+    "kurgan": "Asia/Yekaterinburg", "cherepovets": "Europe/Moscow", "oryol": "Europe/Moscow",
+    "nizhnevartovsk": "Asia/Yekaterinburg", "yoshkar_ola": "Europe/Moscow", "murmansk": "Europe/Moscow",
+    "novorossiysk": "Europe/Moscow", "khimki": "Europe/Moscow", "mytishchi": "Europe/Moscow", "nalchik": "Europe/Moscow",
+    "nizhnekamsk": "Europe/Moscow", "blagoveshchensk": "Asia/Yakutsk", "korolyov": "Europe/Moscow", "shakhty": "Europe/Moscow",
+    "engels": "Europe/Saratov", "veliky_novgorod": "Europe/Moscow", "lyubertsy": "Europe/Moscow", "bratsk": "Asia/Irkutsk",
+    "stary_oskol": "Europe/Moscow", "angarsk": "Asia/Irkutsk", "syktyvkar": "Europe/Moscow", "dzerzhinsk": "Europe/Moscow",
 }
 
 # Смещение от UTC (часы) для запасного расчёта местного времени
@@ -207,6 +251,11 @@ CITY_UTC_OFFSET_HOURS: Dict[str, int] = {
     "sochi": 3, "vladikavkaz": 3, "grozny": 3, "tambov": 3, "ivanovo": 3, "tver": 3, "simferopol": 3, "kostroma": 3,
     "volzhsky": 3, "taganrog": 3, "sterlitamak": 5, "komsomolsk_na_amure": 10, "petrozavodsk": 3, "lipetsk": 3,
     "arhangelsk": 3, "cheboksary": 3, "kaluga": 3, "smolensk": 3,
+    "penza": 3, "astrakhan": 3, "ulan_ude": 8, "surgut": 5, "yakutsk": 9, "vladimir": 3, "belgorod": 3, "nizhny_tagil": 5,
+    "chita": 9, "podolsk": 3, "saransk": 3, "vologda": 3, "kurgan": 5, "cherepovets": 3, "oryol": 3, "nizhnevartovsk": 5,
+    "yoshkar_ola": 3, "murmansk": 3, "novorossiysk": 3, "khimki": 3, "mytishchi": 3, "nalchik": 3, "nizhnekamsk": 3,
+    "blagoveshchensk": 9, "korolyov": 3, "shakhty": 3, "engels": 4, "veliky_novgorod": 3, "lyubertsy": 3, "bratsk": 8,
+    "stary_oskol": 3, "angarsk": 8, "syktyvkar": 3, "dzerzhinsk": 3,
 }
 
 # Региональные RSS: у каждого города свои ленты. Сначала — надёжные федеральные (РИА, ТАСС, Интерфакс, Lenta), затем региональные.
@@ -1965,22 +2014,7 @@ def build_remind_time_keyboard(city_slug: str, tz_id: str) -> InlineKeyboardMark
 async def send_weather_only(
     context: ContextTypes.DEFAULT_TYPE, chat_id: int, city: City
 ) -> None:
-    """Только погода по городу (каждый запрос — другая картинка из папки города)."""
-    weather_data = await get_weather_data(city)
-    temp = weather_data.get("temp") if weather_data else None
-    temp_str = f"{temp:+.0f}°C" if temp is not None else ""
-    caption = f"🏛 {city.name_ru}"
-    if temp_str:
-        caption += f"\nСейчас: {temp_str}"
-    try:
-        img_bytes = _get_random_city_image_bytes(city, chat_id=chat_id)
-        await context.bot.send_photo(
-            chat_id=chat_id,
-            photo=InputFile(io.BytesIO(img_bytes), filename=f"{city.slug}.png"),
-            caption=caption,
-        )
-    except Exception as exc:
-        logger.warning("Historic center image for %s: %s", city.slug, exc)
+    """Только погода по городу (без картинки «Исторический центр»)."""
     weather_text = await get_weather(city)
     # Кнопка «7 дней» + 3 ближайших города к текущему (по расстоянию).
     quick_slugs = get_nearest_city_slugs(city, limit=3)
@@ -2054,9 +2088,9 @@ async def send_city_info(
 _START_VERSION_MARKER = "Версия 2.0 • tg bot2 • 27.02.2025"
 
 _START_GREETINGS = (
-    "Привет! Я бот погоды и новостей по городам России (500 тыс.+ жителей).",
+    "Привет! Я бот погоды и новостей по городам России (200 тыс.+ жителей).",
     "Здравствуйте! Погода и новости по городам России — выбирайте город и смотрите актуальную информацию.",
-    "Добро пожаловать! Здесь вы найдёте погоду и новости по городам России с населением от 500 тыс.+.",
+    "Добро пожаловать! Здесь вы найдёте погоду и новости по городам России с населением от 200 тыс.+.",
     "Привет! Узнайте погоду и последние новости по любому крупному городу России.",
     "Рад видеть! Я подскажу погоду и новости по городам России — просто выберите город.",
 )
@@ -2133,7 +2167,7 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> N
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     text = (
-        "Погода и новости по городам России (500 тыс.+). Выбор из топ‑10 или 🔍 поиск по названию.\n\n"
+        "Погода и новости по городам России (200 тыс.+). Выбор из топ‑10 или 🔍 поиск по названию.\n\n"
         "**Команды** (также в кнопке ☰ Меню слева от поля ввода):\n"
         "/start — приветствие и карта\n"
         "/menu — открыть меню кнопками\n"
@@ -2318,7 +2352,7 @@ async def handle_city_search_message(update: Update, context: ContextTypes.DEFAU
     if not cities:
         await context.bot.send_message(
             chat_id=chat_id,
-            text="По запросу «%s» города не найдены. В списке — города России с населением 500 тыс.+ Попробуйте другое название." % text[:50],
+            text="По запросу «%s» города не найдены. В списке — города России с населением 200 тыс.+ Попробуйте другое название." % text[:50],
         )
         return True
     if len(cities) == 1:
@@ -2413,7 +2447,7 @@ async def menu_reply_handler(update: Update, context: ContextTypes.DEFAULT_TYPE)
         await context.bot.send_message(
             chat_id=chat_id,
             text=(
-                    "Я показываю погоду и новости по городам России (500 тыс.+). Топ‑10 в списке или 🔍 поиск по названию.\n\n"
+                    "Я показываю погоду и новости по городам России (200 тыс.+). Топ‑10 в списке или 🔍 поиск по названию.\n\n"
                 "**Команды:**\n"
                     "/start — приветствие и карта России\n"
                     "/menu — открыть блок меню\n"
@@ -2552,7 +2586,7 @@ async def city_button_handler(update: Update, context: ContextTypes.DEFAULT_TYPE
             await context.bot.send_message(
                 chat_id=chat_id,
                 text=(
-                    "Я показываю погоду и новости по городам России с населением 500 тыс.+.\n\n"
+                    "Я показываю погоду и новости по городам России с населением 200 тыс.+.\n\n"
                     "**Команды:**\n"
                     "/start — приветствие и карта России\n"
                     "/menu — открыть блок меню\n"

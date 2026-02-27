@@ -33,6 +33,9 @@
     "historic_yekaterinburg.png",
     "historic_kazan.png",
     "historic_nizhny_novgorod.png",
+    "historic_nizhny_novgorod_2.png",
+    "historic_nizhny_novgorod_3.png",
+    "historic_nizhny_novgorod_4.png",
     "historic_chelyabinsk.png",
     "historic_ufa.png",
     "historic_krasnodar.png",
@@ -46,7 +49,20 @@
     "historic_irkutsk.png",
     "historic_vladivostok.png",
     "historic_yaroslavl.png",
-    "historic_tula.png"
+    "historic_tula.png",
+    "historic_penza.png",
+    "historic_astrakhan.png",
+    "historic_vladimir.png",
+    "historic_belgorod.png",
+    "historic_novorossiysk.png",
+    "historic_murmansk.png",
+    "historic_veliky_novgorod.png",
+    "historic_surgut.png",
+    "historic_yakutsk.png",
+    "historic_saransk.png",
+    "historic_vologda.png",
+    "historic_nalchik.png",
+    "historic_blagoveshchensk.png"
   ];
 
   var landingBgRoot = null;
@@ -753,25 +769,6 @@
       "<span class=\"header-city-symbol\" aria-hidden=\"true\">" + getCitySymbol(slug) + "</span>" +
       "<h1>" + escapeHtml(city.name_ru) + "</h1>";
     fragment.appendChild(header);
-
-    var photoWrap = document.createElement("div");
-    photoWrap.className = "city-photo-wrap";
-    var prevBtn = document.createElement("button");
-    prevBtn.type = "button";
-    prevBtn.className = "photo-nav photo-nav-prev";
-    prevBtn.setAttribute("aria-label", "Предыдущее фото");
-    prevBtn.innerHTML = "‹";
-    var nextBtn = document.createElement("button");
-    nextBtn.type = "button";
-    nextBtn.className = "photo-nav photo-nav-next";
-    nextBtn.setAttribute("aria-label", "Следующее фото");
-    nextBtn.innerHTML = "›";
-    var historicImg = document.createElement("img");
-    photoWrap.appendChild(prevBtn);
-    photoWrap.appendChild(historicImg);
-    photoWrap.appendChild(nextBtn);
-    fragment.appendChild(photoWrap);
-    setCityImageWithFallback(historicImg, slug);
 
     var currentBlock = document.createElement("div");
     currentBlock.className = "current-weather loading";

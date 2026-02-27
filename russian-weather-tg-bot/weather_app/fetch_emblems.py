@@ -3,7 +3,7 @@
 import urllib.request
 import urllib.parse
 import json
-import sys
+import os
 
 # slug -> list of possible Commons filenames (try in order)
 CITY_FILES = [
@@ -69,6 +69,41 @@ CITY_FILES = [
     ("cheboksary", ["Coat_of_Arms_of_Cheboksary.svg"]),
     ("kaluga", ["Coat_of_Arms_of_Kaluga.svg"]),
     ("smolensk", ["Coat_of_Arms_of_Smolensk.svg"]),
+    # 200k+ города
+    ("penza", ["Coat_of_Arms_of_Penza.svg", "Coat_of_arms_of_Penza.svg"]),
+    ("astrakhan", ["Coat_of_Arms_of_Astrakhan.svg", "Coat_of_arms_of_Astrakhan.svg"]),
+    ("ulan_ude", ["Coat_of_Arms_of_Ulan-Ude.svg", "Coat_of_arms_of_Ulan-Ude.svg"]),
+    ("surgut", ["Coat_of_Arms_of_Surgut.svg"]),
+    ("yakutsk", ["Coat_of_Arms_of_Yakutsk.svg"]),
+    ("vladimir", ["Coat_of_Arms_of_Vladimir.svg", "Coat_of_arms_of_Vladimir.svg"]),
+    ("belgorod", ["Coat_of_Arms_of_Belgorod.svg"]),
+    ("nizhny_tagil", ["Coat_of_Arms_of_Nizhny_Tagil.svg"]),
+    ("chita", ["Coat_of_Arms_of_Chita.svg"]),
+    ("podolsk", ["Coat_of_Arms_of_Podolsk.svg"]),
+    ("saransk", ["Coat_of_Arms_of_Saransk.svg"]),
+    ("vologda", ["Coat_of_Arms_of_Vologda.svg"]),
+    ("kurgan", ["Coat_of_Arms_of_Kurgan.svg"]),
+    ("cherepovets", ["Coat_of_Arms_of_Cherepovets.svg"]),
+    ("oryol", ["Coat_of_Arms_of_Oryol.svg", "Coat_of_arms_of_Oryol.svg"]),
+    ("nizhnevartovsk", ["Coat_of_Arms_of_Nizhnevartovsk.svg"]),
+    ("yoshkar_ola", ["Coat_of_Arms_of_Yoshkar-Ola.svg"]),
+    ("murmansk", ["Coat_of_Arms_of_Murmansk.svg"]),
+    ("novorossiysk", ["Coat_of_Arms_of_Novorossiysk.svg"]),
+    ("khimki", ["Coat_of_Arms_of_Khimki.svg"]),
+    ("mytishchi", ["Coat_of_Arms_of_Mytishchi.svg"]),
+    ("nalchik", ["Coat_of_Arms_of_Nalchik.svg"]),
+    ("nizhnekamsk", ["Coat_of_Arms_of_Nizhnekamsk.svg"]),
+    ("blagoveshchensk", ["Coat_of_Arms_of_Blagoveshchensk.svg"]),
+    ("korolyov", ["Coat_of_Arms_of_Korolyov.svg", "Coat_of_Arms_of_Korolev.svg"]),
+    ("shakhty", ["Coat_of_Arms_of_Shakhty.svg"]),
+    ("engels", ["Coat_of_Arms_of_Engels_(Saratov_oblast).svg"]),
+    ("veliky_novgorod", ["Coat_of_Arms_of_Veliky_Novgorod.svg"]),
+    ("lyubertsy", ["Coat_of_Arms_of_Lyubertsy.svg"]),
+    ("bratsk", ["Coat_of_Arms_of_Bratsk.svg"]),
+    ("stary_oskol", ["Coat_of_Arms_of_Stary_Oskol.svg"]),
+    ("angarsk", ["Coat_of_Arms_of_Angarsk.svg"]),
+    ("syktyvkar", ["Coat_of_Arms_of_Syktyvkar.svg"]),
+    ("dzerzhinsk", ["Coat_of_Arms_of_Dzerzhinsk_(Nizhny_Novgorod_Oblast).svg"]),
 ]
 
 def fetch_thumb(slug, filenames):
@@ -97,16 +132,22 @@ def fetch_thumb(slug, filenames):
 
 def main():
     out = {}
+    existing_path = "emblems.json"
+    if os.path.isfile(existing_path):
+        with open(existing_path, "r", encoding="utf-8") as f:
+            out = json.load(f)
     for slug, fname_list in CITY_FILES:
+        if slug in out:
+            continue
         url = fetch_thumb(slug, fname_list)
         if url:
             out[slug] = url
             print(slug, "OK")
         else:
             print(slug, "MISSING")
-    with open("emblems_new.json", "w", encoding="utf-8") as f:
+    with open("emblems.json", "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=2)
-    print("Written emblems_new.json with", len(out), "cities")
+    print("Written emblems.json with", len(out), "cities")
 
 if __name__ == "__main__":
     main()
